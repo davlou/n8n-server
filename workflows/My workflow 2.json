@@ -1,0 +1,139 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        144
+      ],
+      "id": "2c3d0fd6-f51e-4149-a691-cbfcca3f0cce",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1U9w_gp9EY7c1Kzr2S8LfsTZJBWZK8T3l",
+          "mode": "list",
+          "cachedResultName": "RELEVE SOCIETE TEST.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1U9w_gp9EY7c1Kzr2S8LfsTZJBWZK8T3l/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        544,
+        144
+      ],
+      "id": "972a09a4-3b74-46c3-b104-f496bcbf1474",
+      "name": "Download file"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.text || \"\";\nif (!text.trim()) {\n  return [{ json: { error: \"Missing OCR text in input\" } }];\n}\n\n// === Clean text ===\nconst cleanText = text\n  .replace(/=== Page \\d+ ===/g, \"\")\n  .replace(/--- Page Break ---/g, \"\")\n  .replace(/\\s{2,}/g, \" \")\n  .replace(/\\n{2,}/g, \"\\n\")\n  .trim();\n\n// === Extract header info ===\nconst periodMatch = cleanText.match(/Du\\s+(\\d{2}\\/\\d{2}\\/(\\d{4}))\\s+au\\s+(\\d{2}\\/\\d{2}\\/(\\d{4}))/i);\nconst startDateStr = periodMatch ? periodMatch[1] : null;\nconst endDateStr = periodMatch ? periodMatch[3] : null;\nconst startYear = periodMatch ? parseInt(periodMatch[2]) : new Date().getFullYear();\nconst endYear = periodMatch ? parseInt(periodMatch[4]) : startYear;\n\nconst companyMatch = cleanText.match(/SAS\\s+[A-ZÉÈÊËÀÂÄÎÏÔÖÛÜÇ\\s-]+/i);\nlet company = companyMatch ? companyMatch[0].trim() : null;\nif (company && company.includes(\"Solde au\")) company = company.split(\"Solde au\")[0].trim();\n\nconst ibanMatch = cleanText.match(/IBAN:\\s*([A-Z0-9\\s]+)/i);\nconst bicMatch = cleanText.match(/BIC:\\s*([A-Z0-9]+)/i);\nlet iban = ibanMatch ? ibanMatch[1].replace(/\\s+/g, \"\") : null;\nif (iban && iban.includes(\"BIC\")) iban = iban.split(\"BIC\")[0].trim();\n\nconst startBalanceMatch = cleanText.match(/Solde au\\s+\\d{2}\\/\\d{2}\\s*[+-]?\\s*([\\d.,]+)\\s*EUR/i);\nconst endBalanceMatch = cleanText.match(/Solde au\\s+\\d{2}\\/\\d{2}.*?([+-]?\\d+[\\.,]?\\d*)\\s*EUR/i);\nconst totalEntriesMatch = cleanText.match(/Entr[ée]e?s?\\s*\\+?\\s*([\\d.,]+)\\s*EUR/i);\nconst totalExitsMatch = cleanText.match(/Sorties\\s*-?\\s*([\\d.,]+)\\s*EUR/i);\n\n// === Transaction parsing ===\nconst lines = cleanText.split(\"\\n\");\nconst transactions = [];\nlet currentTx = null;\nconst txRegex = /^(\\d{2}\\/\\d{2})\\s+([\\wÀ-ÿ0-9&'.\\s]+?)\\s*([+-])\\s*([\\d.,]+)\\s*EUR/i;\n\n// Helper to determine correct year if period spans two years\nfunction getTransactionYear(month, day) {\n  if (startYear === endYear) return startYear;\n  const startMonth = parseInt(startDateStr.split(\"/\")[1]);\n  const startDay = parseInt(startDateStr.split(\"/\")[0]);\n  if (month > startMonth || (month === startMonth && day >= startDay)) {\n    return startYear;\n  } else {\n    return endYear;\n  }\n}\n\nfor (const line of lines) {\n  const match = line.trim().match(txRegex);\n  if (match) {\n    if (currentTx) transactions.push(currentTx);\n    const [_, date, label, sign, amountStr] = match;\n    const amount = parseFloat(amountStr.replace(\",\", \".\"));\n    const type = sign === \"-\" ? \"debit\" : \"credit\";\n    const [day, month] = date.split(\"/\").map(v => parseInt(v));\n    const year = getTransactionYear(month, day);\n    const isoDate = `${year}-${month.toString().padStart(2, \"0\")}-${day.toString().padStart(2, \"0\")}`;\n\n    currentTx = {\n      date: isoDate,\n      label: label.trim(),\n      amount: type === \"debit\" ? -amount : amount,\n      type,\n      description: null,\n      category: null\n    };\n  } else if (currentTx && line && !/EUR|Du\\s|IBAN|BIC|Solde|Entr|Sorties/i.test(line)) {\n    currentTx.description = (currentTx.description ? currentTx.description + \" \" : \"\") + line.trim();\n  }\n}\nif (currentTx) transactions.push(currentTx);\n\n// === Categorize transactions ===\nfor (const tx of transactions) {\n  const desc = (tx.description || \"\").toLowerCase();\n  const label = tx.label.toLowerCase();\n\n  if (desc.includes(\"facture\") || label.includes(\"client\")) tx.category = \"Client\";\n  else if (desc.includes(\"salaire\")) tx.category = \"Salaire\";\n  else if (desc.includes(\"prélèvement\")) tx.category = \"Prélèvement\";\n  else if (desc.includes(\"carte\")) tx.category = \"Paiement carte\";\n  else if (label.includes(\"qonto\") || desc.includes(\"frais\")) tx.category = \"Frais bancaires\";\n  else tx.category = \"Fournisseur\";\n}\n\n// === Compute totals ===\nconst totalDebit = transactions.filter(t => t.type === \"debit\").reduce((a, b) => a + Math.abs(b.amount), 0);\nconst totalCredit = transactions.filter(t => t.type === \"credit\").reduce((a, b) => a + b.amount, 0);\nconst balance = totalCredit - totalDebit;\n\n// === Final output ===\nreturn [\n  {\n    json: {\n      summary: {\n        company,\n        period: startDateStr ? { from: startDateStr, to: endDateStr } : null,\n        iban,\n        bic: bicMatch ? bicMatch[1] : null,\n        start_balance: startBalanceMatch ? parseFloat(startBalanceMatch[1].replace(\",\", \".\")) : null,\n        total_credit: totalCredit,\n        total_debit: totalDebit,\n        balance: endBalanceMatch ? parseFloat(endBalanceMatch[1].replace(\",\", \".\")) : balance,\n        count: transactions.length\n      },\n      transactions,\n      raw_text: cleanText\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        144
+      ],
+      "id": "e9acaa86-64b0-47d0-a1ef-f2023f52a0ce",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://109.176.199.57:8000/ocr/pdf",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "K8mP9nX2vL5qR7wE4tY6uI3oA1sD0fG"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "languages",
+              "value": "fra"
+            },
+            {
+              "name": "mode",
+              "value": "advanced"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        848,
+        144
+      ],
+      "id": "29213ea9-5ada-4236-922e-c721c2df6083",
+      "name": "OCR"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "32cab19d-884e-4b39-a1f3-21afc5abda65",
+  "meta": {
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "RdVfFlOMdksRGrEY",
+  "tags": []
+}

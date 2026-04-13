@@ -1,0 +1,796 @@
+{
+  "name": "cahier_des_charges_03_webhook_formulaire",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Demande de renseignements",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -464,
+        -560
+      ],
+      "id": "74bbf42f-4717-43f5-acf3-fa5471bcfef0",
+      "name": "On form submission",
+      "webhookId": "c0411503-5538-4a91-9fda-a8c00626ac8a"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n\"civilite\": \"{{$('Webhook').item.json.body.civilite}}\",\n\"nom\": \"{{$('Webhook').item.json.body.nom}}\",\n\"prenom\": \"{{$('Webhook').item.json.body.prenom}}\",\n\"email\": \"{{$('Webhook').item.json.body.email}}\",\n\"telephone\": \"{{$('Webhook').item.json.body.telephone}}\",\n\"entreprise\": \"{{$('Webhook').item.json.body.entreprise || 'Non renseigné'}}\",\n\"formation\": \"{{$('Webhook').item.json.body.formation}}\",\n\"message\": \"{{$('Webhook').item.json.body.message}}\",\n\"date_demande\": \"{{$now.format('dd/MM/yyyy')}}\",\n\"heure_demande\": \"{{$now.format('HH:mm:ss')}}\",\n\"statut\": \"Nouveau\",\n\"traite_par\": \"\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        -32
+      ],
+      "id": "bb68de11-b6a2-4990-961c-f8ec7b53d96d",
+      "name": "Get form data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const timestamp = Date.now();\nconst randomNum = Math.floor(Math.random() * 1000);\nconst uniqueId = `LEAD-${timestamp}-${randomNum}`;\n\nreturn {\n  json: {\n    ...items[0].json,\n    lead_id: uniqueId\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        -48
+      ],
+      "id": "7719386c-3725-4b4c-ac51-dd5425b0aebe",
+      "name": "Generate unique lead ID"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18z-rmR5XVedAYSjSp3PYaaJzbhZAZ2-SEtFNV4djiwI",
+          "mode": "list",
+          "cachedResultName": "n8n-leads-formations-2025",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18z-rmR5XVedAYSjSp3PYaaJzbhZAZ2-SEtFNV4djiwI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "demandes-contact",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18z-rmR5XVedAYSjSp3PYaaJzbhZAZ2-SEtFNV4djiwI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID Lead": "={{ $json.lead_id }}",
+            "Date": "={{ $('Get form data').item.json.date_demande }}",
+            "Heure": "={{ $('Get form data').item.json.heure_demande }}",
+            "Civilité": "={{ $('Get form data').item.json.civilite }}",
+            "Nom": "={{ $('Get form data').item.json.nom }}",
+            "Prénom": "={{ $('Get form data').item.json.prenom }}",
+            "Email": "={{ $('Get form data').item.json.email }}",
+            "Téléphone": "={{ $('Get form data').item.json.telephone }}",
+            "Entreprise": "={{ $('Get form data').item.json.entreprise }}",
+            "Message": "={{ $('Get form data').item.json.message }}",
+            "Formation": "={{ $('Get form data').item.json.formation }}",
+            "Statut": "={{ $('Get form data').item.json.statut }}",
+            "Traité par": "={{ $('Get form data').item.json.traite_par }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID Lead",
+              "displayName": "ID Lead",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Heure",
+              "displayName": "Heure",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Civilité",
+              "displayName": "Civilité",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nom",
+              "displayName": "Nom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prénom",
+              "displayName": "Prénom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Téléphone",
+              "displayName": "Téléphone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Entreprise",
+              "displayName": "Entreprise",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Formation",
+              "displayName": "Formation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Statut",
+              "displayName": "Statut",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Traité par",
+              "displayName": "Traité par",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1920,
+        -48
+      ],
+      "id": "7ddd1556-faab-470c-b961-a5c24e159c40",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Nouvelle demande: {{ $('Generate unique lead ID').item.json.formation }} - {{ $('Generate unique lead ID').item.json.nom }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2368,
+        -48
+      ],
+      "id": "5383fb67-b4d5-4d13-a01a-eb89e7cdc169",
+      "name": "Create a draft",
+      "webhookId": "496e2166-000d-4b71-a4b7-573ce302bf5d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hEVnGLFlJKGzGJFG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "html": "<div style=\"font-family: Arial, sans-serif;\">\n  <div style=\"background:#4CAF50; color:white; padding:20px;\">\n    <h2>Nouvelle Demande de Renseignement</h2>\n  </div>\n\n  <div style=\"padding:20px;\">\n    <div style=\"background:#f5f5f5; padding:15px; margin:10px 0; border-left:4px solid #4CAF50;\">\n      <p><strong>ID Lead:</strong> {{ $('Generate unique lead ID').item.json.lead_id }}</p>\n      <p><strong>Reçu le:</strong> {{ $('Get form data').item.json.date_demande }} à {{ $('Get form data').item.json.heure_demande }}</p>\n    </div>\n\n    <h3>Informations Contact</h3>\n    <div style=\"background:#f5f5f5; padding:15px; margin:10px 0; border-left:4px solid #4CAF50;\">\n      <p><strong>Nom complet:</strong> {{ $('Get form data').item.json.civilite }} {{ $('Get form data').item.json.prenom }}</p>\n      <p><strong>Email:</strong> <a href=\"mailto:{{ $('Generate unique lead ID').item.json.email }}\" style=\"color:#4CAF50;\">{{ $('Get form data').item.json.email }}</a></p>\n      <p><strong>Téléphone:</strong> {{ $('Get form data').item.json.telephone }}</p>\n      <p><strong>Entreprise:</strong> {{ $('Get form data').item.json.entreprise }}</p>\n    </div>\n\n    <h3>Formation d'intérêt</h3>\n    <div style=\"background:#f5f5f5; padding:15px; margin:10px 0; border-left:4px solid #4CAF50;\">\n      <p><strong>{{ $('Get form data').item.json.formation }}</strong></p>\n    </div>\n\n    <h3>Message</h3>\n    <div style=\"background:#f5f5f5; padding:15px; margin:10px 0; border-left:4px solid #4CAF50;\">\n      <p>{{ $('Get form data').item.json.message }}</p>\n    </div>\n\n    <p style=\"margin-top:30px;\">\n      <a href=\"https://docs.google.com/spreadsheets/d/XXX\" style=\"background:#4CAF50; color:white; padding:10px 20px; text-decoration:none;\">Voir dans Google Sheets</a>\n    </p>\n  </div>\n\n  <div style=\"background:#f9f9f9; padding:15px; margin-top:20px; font-size:12px; color:#999;\">\n    <p>Ce lead a été automatiquement ajouté à votre Google Sheets \"Leads_Formations_20\"</p>\n    <p>Répondez rapidement pour maximiser vos chances de conversion !</p>\n    <p>Automatisation N8N - Formation Excellence</p>\n  </div>\n</div>\n"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        2144,
+        -48
+      ],
+      "id": "3f1d65f7-4d6c-401f-afd3-f9c958b817bd",
+      "name": "Email Content"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        -384
+      ],
+      "id": "b8cb5d2b-754b-4368-812d-03faba31c5a8",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "1c6b6bb1-b35b-4c76-8578-6eae7f0c7f6d",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -448,
+        80
+      ],
+      "id": "11be5a97-cc92-41b9-8cd5-7e8137fe216b",
+      "name": "Webhook",
+      "webhookId": "1c6b6bb1-b35b-4c76-8578-6eae7f0c7f6d"
+    },
+    {
+      "parameters": {
+        "jsCode": "let invalidFields = [];\n\n// Trim inputs\nconst email = $json.email ? $json.email.trim() : \"\";\nconst phone = $json.telephone ? $json.telephone.trim() : \"\";\nconst message = $json.message ? $json.message.trim() : \"\";\n\n// Email validation\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!email || !emailRegex.test(email)) invalidFields.push(\"email\");\n\n// Phone validation\nconst phoneRegex = /^(?:0|\\+33)[1-9](?:\\d{2}){4}$|^(?:0|\\+33)[1-9](?:[\\s.-]?\\d{2}){4}$/;\nif (!phone || !phoneRegex.test(phone)) invalidFields.push(\"phone\");\n\n// Message validation\nif (!message || message.length < 10) invalidFields.push(\"message\");\n\n// Status\nconst status = invalidFields.length === 0 ? \"valid\" : \"invalid\";\n\nreturn [\n  {\n    json: {\n      status: status,\n      invalidFields: invalidFields\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        -32
+      ],
+      "id": "6053b329-3c5e-46f3-89ae-a83ec0108102",
+      "name": "Validate data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9512d11e-dd0e-423d-b5cc-17e1f2f5e542",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "valid",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        -32
+      ],
+      "id": "e95774c4-32cf-43c9-a35d-9a4b88a9109a",
+      "name": "Is Valid"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eb8fee70-fdd5-45e0-a490-4fa28e21a753",
+              "leftValue": "={{ $json.headers['x-api-key'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b4f55a47-2961-423d-946e-35bed6249e49",
+              "leftValue": "={{ $json.headers['x-api-key'] }}",
+              "rightValue": "FrmExc2025!SecureKey789",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        80
+      ],
+      "id": "7f7365a4-255f-40b7-89c0-71f718df5160",
+      "name": "Checking valid API key"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "flMCGD8KSVGZSUNL",
+          "mode": "list",
+          "cachedResultName": "cahier_des_charges_03_rate_lim",
+          "cachedResultUrl": "/projects/MiJaT8nbaGu0p8Fr/datatables/flMCGD8KSVGZSUNL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "api_key",
+              "keyValue": "={{ $('Webhook').item.json.headers['x-api-key'] }}"
+            },
+            {
+              "keyName": "createdAt",
+              "condition": "gte",
+              "keyValue": "={{ DateTime.fromMillis($json.rate_period_start).toISO() }}"
+            },
+            {
+              "keyName": "createdAt",
+              "condition": "lte",
+              "keyValue": "={{ DateTime.fromMillis($json.rate_period_end).toISO() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -16
+      ],
+      "id": "b23902c1-09bd-4b0a-adcb-ded9b6ecddc8",
+      "name": "Get usage for user",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a930ad7e-9091-4c51-b1f7-53f03f6d391d",
+              "name": "headers['x-api-key']",
+              "value": "={{ $('Webhook').item.json.headers['x-api-key'] }}",
+              "type": "string"
+            },
+            {
+              "id": "c96ab965-93b7-43a9-b60c-65289529628d",
+              "name": "rate_period_start",
+              "value": "={{ DateTime.now() - 60000 }}",
+              "type": "number"
+            },
+            {
+              "id": "e2899f00-2a64-4664-bfe8-de37b12fc02f",
+              "name": "rate_period_end",
+              "value": "={{ DateTime.now().toMillis() }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        -16
+      ],
+      "id": "65c8968c-26f3-495a-a595-d94eb80ab9f3",
+      "name": "Rate limiter parameters"
+    },
+    {
+      "parameters": {
+        "content": "## Rate limiter",
+        "height": 432,
+        "width": 1120
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -272,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "c1846a43-6d42-43f8-ad84-bbe348bc6c7e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bbeeb0ba-8c9d-428b-b9f1-688d16eecc9c",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        80
+      ],
+      "id": "e622f397-e918-409b-a22d-3bc5b2f2b97c",
+      "name": "Is within rate limit"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "flMCGD8KSVGZSUNL",
+          "mode": "list",
+          "cachedResultName": "cahier_des_charges_03_rate_lim",
+          "cachedResultUrl": "/projects/MiJaT8nbaGu0p8Fr/datatables/flMCGD8KSVGZSUNL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "api_key": "={{ $('Rate limiter parameters').item.json.headers['x-api-key'] }}",
+            "request_timestamp": "={{ DateTime.now() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "api_key",
+              "displayName": "api_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "request_timestamp",
+              "displayName": "request_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        688,
+        -32
+      ],
+      "id": "2a627068-fef3-474f-906f-ee54974257d9",
+      "name": "Insert usage record"
+    },
+    {
+      "parameters": {
+        "content": "## Validate data\n",
+        "height": 432,
+        "width": 736,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "a0c80f39-c163-45de-876b-d277e9848af9",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Record and Send data",
+        "height": 432,
+        "width": 976,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1584,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "356d51e3-5e09-4da0-b2eb-bf17f0e57723",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Form data",
+        "height": 432,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -512,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "46a3b046-3592-489c-bc13-d69e04ccee86",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "localhost:5678",
+            "connection": "keep-alive",
+            "content-length": "195",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.106.0 Chrome/138.0.7204.251 Electron/37.7.0 Safari/537.36",
+            "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+            "content-type": "application/json",
+            "x-api-key": "FrmExc2025!SecureKey789",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "http://127.0.0.1:3000",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://127.0.0.1:3000/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-GB"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "civilite": "M.",
+            "nom": "Inno",
+            "prenom": "Mation",
+            "email": "innomation@skool.com",
+            "telephone": "0612345678",
+            "entreprise": "Innomation",
+            "formation": "Formation Excel Avancé",
+            "message": "bonjour, merci"
+          },
+          "webhookUrl": "http://localhost:5678/webhook/1c6b6bb1-b35b-4c76-8578-6eae7f0c7f6d",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "On form submission": {
+      "main": [
+        []
+      ]
+    },
+    "Get form data": {
+      "main": [
+        [
+          {
+            "node": "Validate data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate unique lead ID": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Content": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Checking valid API key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate data": {
+      "main": [
+        [
+          {
+            "node": "Is Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Valid": {
+      "main": [
+        [
+          {
+            "node": "Generate unique lead ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checking valid API key": {
+      "main": [
+        [
+          {
+            "node": "Rate limiter parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get usage for user": {
+      "main": [
+        [
+          {
+            "node": "Is within rate limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate limiter parameters": {
+      "main": [
+        [
+          {
+            "node": "Get usage for user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is within rate limit": {
+      "main": [
+        [
+          {
+            "node": "Insert usage record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert usage record": {
+      "main": [
+        [
+          {
+            "node": "Get form data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "ff2eed73-b225-4ab2-ad38-abd0e344d2b5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "u7StYa5kqxkkH1z7",
+  "tags": []
+}

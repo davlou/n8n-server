@@ -1,0 +1,347 @@
+{
+  "name": "cahier_des_charges_02_bot_telegram_ia",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "bab9f62a-b180-40e8-bc20-c7445454474d",
+      "name": "Telegram Trigger",
+      "webhookId": "d0214243-cb30-43b2-ba36-d94b172926d6",
+      "credentials": {
+        "telegramApi": {
+          "id": "Axs1lYEaPS6nGgdA",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.user_message }}",
+        "options": {
+          "systemMessage": "=Tu es l'assistant technique virtuel de TECH ASSISTANCE PRO, une société d'assistance informa\nTON RÔLE :\n- Aider les clients avec leurs problèmes informatiques courants\n- Être professionnel, poli et rassurant\n- Donner des instructions claires étape par étape\n- Proposer de contacter un technicien humain si le problème est complexe\nDOMAINES D'EXPERTISE :\n1. Réinitialisation de mot de passe Windows/Office\n2. Problèmes de connexion réseau/WiFi\n3. Installation de logiciels courants\n4. Problèmes d'imprimante (bourrage, hors ligne)\n5. Configuration messagerie Outlook\n6. Connexion VPN entreprise\n7. Redémarrage/maintenance basique\nINSTRUCTIONS :\n- Commence toujours par saluer chaleureusement\n- Pose des questions de clarification si nécessaire\n- Fournis des solutions étape par étape avec numéros\n- Si le problème est trop complexe, propose : \"Je vous conseille de contacter notre équipe t\n- Utilise des émojis appropriés pour rendre l'échange plus agréable : � � � � � �\n- Reste concis (maximum 5-6 lignes par réponse)\nQuestion du client : {{$json.user_message}}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        -16
+      ],
+      "id": "180ee7be-6568-427a-b66f-c753d2301fae",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        640,
+        208
+      ],
+      "id": "5f3b6d9c-b10f-4abf-8c1f-d4fc4195e48d",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "RgUMePIkVJhMO1Ad",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "ba433156-28e8-4705-9241-faf2848f8df1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e8ccb972-0c80-4f0d-ba84-c586b2cef5b0",
+                    "leftValue": "audio_placeholder",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "e0574ccd-e365-4ab6-ba4c-028d28b4073b",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.response_text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        -16
+      ],
+      "id": "0f602515-92fc-4645-809d-a98e8bb5ecf2",
+      "name": "Send a text message",
+      "webhookId": "16170463-fb96-46f8-9320-487add9f908f",
+      "credentials": {
+        "telegramApi": {
+          "id": "Axs1lYEaPS6nGgdA",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Get user message info').item.json.chat_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        208
+      ],
+      "id": "ca371dd5-6855-4b15-93e2-5466a945a296",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5c88ce8-08c3-44d9-8411-af9f19f595b2",
+              "name": "response_text",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "3e733ed9-9607-426b-b241-c41174b63707",
+              "name": "chat_id",
+              "value": "={{ $('Get user message info').item.json.chat_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        -16
+      ],
+      "id": "663647d4-7e2e-4dbf-9cbe-8c9547089b0b",
+      "name": "Prepare text message"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a9978380-da01-4f06-aca0-56134ab31f83",
+              "name": "user_message",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "89c8c7ca-c97c-4f1b-ab33-42daf367f3c5",
+              "name": "chat_id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "number"
+            },
+            {
+              "id": "3c9b7133-35e8-4236-a20c-b4ad808ac5e5",
+              "name": "user_name",
+              "value": "={{ $json.message.from.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "c673db63-e0b6-4187-93f7-4ffb21f96682",
+              "name": "timestamp",
+              "value": "={{ $json.message.date }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "a32f3017-c8c6-4528-960c-09847abe2046",
+      "name": "Get user message info"
+    },
+    {
+      "parameters": {
+        "content": "## Bot Telegram de Support Client",
+        "height": 704,
+        "width": 1680
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -128,
+        -272
+      ],
+      "typeVersion": 1,
+      "id": "77810697-b2fd-41d9-9021-80387eda5235",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Prepare text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get user message info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare text message": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get user message info": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f6023f41-a638-44cc-8594-d40b059f472d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "gahIXMNthyUgfEvq",
+  "tags": []
+}

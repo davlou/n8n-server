@@ -1,0 +1,661 @@
+{
+  "name": "create_calendar_events bak",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// return $input.all().map(item => {\n//   return {\n//     json: {\n//       title: item.json.title,       // Map 'title' to 'title'\n//       start: item.json.start,         // Keep start datetime as-is\n//       end: item.json.end              // Keep end datetime as-is\n//       // Optional: you can add description, location, reminders, etc.\n//     }\n//   };\n// });\n\n\n// Parse the 'text' field from the first input item\nconst raw = $input.all()[0].json.text;       // $input.all()[0] because your JSON is wrapped in 'text'\nconst array = JSON.parse(raw);               // Convert string to array of objects\n\n// Map over the array to return proper n8n items\nreturn array.map(event => ({\n  json: {\n    title: event.title,\n    start: event.start,\n    end: event.end\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -64
+      ],
+      "id": "5e7a36fa-cbc7-43f6-a227-c4efb8e81013",
+      "name": "Format Calendar Data"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "0a8dd74fbfad28e76854e009f7760d537d051beb6652b0bec9f21783b20af9a2@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "n8n-calendar"
+        },
+        "start": "={{ $json.start.dateTime }}",
+        "end": "={{ $json.end.dateTime }}",
+        "additionalFields": {
+          "summary": "={{ $json.title }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        80
+      ],
+      "id": "f8c10c13-f1f6-4599-821b-64841635a602",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "BuC3BEchADE3zTDz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        400,
+        64
+      ],
+      "id": "aff790cc-0fab-4fbc-a72e-4d8b47cfa350",
+      "name": "For Each Calendar Event"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -320,
+        192
+      ],
+      "id": "176cd3ec-9bad-454d-9a62-1cf014eea3ad",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "0a8dd74fbfad28e76854e009f7760d537d051beb6652b0bec9f21783b20af9a2@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "n8n-calendar"
+        },
+        "limit": 500,
+        "timeMin": "2025-10-01T18:10:42",
+        "timeMax": "2025-10-31T18:10:42",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -368,
+        624
+      ],
+      "id": "9533c274-1962-487f-b1e0-e318dfabeecb",
+      "name": "Get many events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "BuC3BEchADE3zTDz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -32,
+        624
+      ],
+      "id": "b2464f5d-021b-4c49-b95a-f988b1a9fdc7",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "0a8dd74fbfad28e76854e009f7760d537d051beb6652b0bec9f21783b20af9a2@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "n8n-calendar"
+        },
+        "eventId": "={{ $json.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        640
+      ],
+      "id": "18f22ed3-6ff0-4f36-b7fc-b109e537ba9e",
+      "name": "Delete an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "BuC3BEchADE3zTDz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        192
+      ],
+      "id": "300a2423-5a19-46ea-8eeb-435f12446623",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "content": "## Reset",
+        "height": 336,
+        "width": 880,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -480,
+        576
+      ],
+      "typeVersion": 1,
+      "id": "7ff83add-3b4d-4652-84e3-3b2f5cc6e223",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Create Events in Google Calendar\n",
+        "height": 560,
+        "width": 1760
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -880,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "b03c65eb-63d7-4e26-b4cf-ce039cfc0622",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -576,
+        -464
+      ],
+      "id": "2135e270-df92-4261-9d8e-48ccdd24b22d",
+      "name": "When chat message received",
+      "webhookId": "d8864052-26d7-4a7b-8b81-e7c2ece01d9a"
+    },
+    {
+      "parameters": {
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -384,
+        -464
+      ],
+      "id": "ee9cf384-4285-447f-8841-9cab230f831d",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        -304
+      ],
+      "id": "aed3e421-4f4e-4094-86c8-10299ad4a500",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "RgUMePIkVJhMO1Ad",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "961a5a5a-39f6-487e-85fd-17b720b67bba",
+              "name": "text",
+              "value": "={{ \n  JSON.parse(\n    $json[\"text\"]\n      .replace(/\\\\\"/g, '\"')  // unescape quotes\n      .replace(/\\\\n/g, '')    // remove literal newlines\n      .trim()\n  ) \n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        -464
+      ],
+      "id": "9cf4585f-93bf-493c-9d35-2c9927049439",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "content": "## Reset",
+        "height": 256,
+        "width": 576,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        592,
+        560
+      ],
+      "typeVersion": 1,
+      "id": "5a879722-7742-44c6-b92c-4806e922a364",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "0a8dd74fbfad28e76854e009f7760d537d051beb6652b0bec9f21783b20af9a2@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "n8n-calendar"
+        },
+        "eventId": "={{ $json.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        608
+      ],
+      "id": "d3315c4a-9489-45ae-aeb0-d88d2eac125a",
+      "name": "Delete an event1",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "BuC3BEchADE3zTDz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "0a8dd74fbfad28e76854e009f7760d537d051beb6652b0bec9f21783b20af9a2@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "n8n-calendar"
+        },
+        "limit": 500,
+        "timeMin": "2025-10-01T18:10:42",
+        "timeMax": "2025-10-31T18:10:42",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        704,
+        608
+      ],
+      "id": "fe0887ca-ee71-49db-b696-78e9e7f60e7e",
+      "name": "Get many events1",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "BuC3BEchADE3zTDz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "0a8dd74fbfad28e76854e009f7760d537d051beb6652b0bec9f21783b20af9a2@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "n8n-calendar"
+        },
+        "start": "={{ $json.start.dateTime }}",
+        "end": "={{ $json.end.dateTime }}",
+        "additionalFields": {
+          "summary": "={{ $json.title }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        192
+      ],
+      "id": "ceea073c-b922-4b4c-9eda-62534c5c1b7c",
+      "name": "Create an event1",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "BuC3BEchADE3zTDz",
+          "name": "Google Calendar account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Edit Fields": [
+      {
+        "json": {
+          "title": "♦️ A&L – Drunk step of the leader with multiple turns for the follower + Marcos technique",
+          "start": {
+            "dateTime": "2025-10-10T12:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          },
+          "end": {
+            "dateTime": "2025-10-10T14:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          }
+        }
+      },
+      {
+        "json": {
+          "title": "☕ Practice break",
+          "start": {
+            "dateTime": "2025-10-10T14:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          },
+          "end": {
+            "dateTime": "2025-10-10T15:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          }
+        }
+      },
+      {
+        "json": {
+          "title": "🍽 Lunch",
+          "start": {
+            "dateTime": "2025-10-10T15:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          },
+          "end": {
+            "dateTime": "2025-10-10T16:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          }
+        }
+      },
+      {
+        "json": {
+          "title": "♦️ A&L – Soltinho adding multiple turns of the leader",
+          "start": {
+            "dateTime": "2025-10-10T16:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          },
+          "end": {
+            "dateTime": "2025-10-10T17:30:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          }
+        }
+      },
+      {
+        "json": {
+          "title": "☕ Practice break",
+          "start": {
+            "dateTime": "2025-10-10T17:30:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          },
+          "end": {
+            "dateTime": "2025-10-10T18:30:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          }
+        }
+      },
+      {
+        "json": {
+          "title": "♦️ A&L – Wi-Fi frango assado possibilities",
+          "start": {
+            "dateTime": "2025-10-10T18:30:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          },
+          "end": {
+            "dateTime": "2025-10-10T20:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          }
+        }
+      },
+      {
+        "json": {
+          "title": "🍽 Dinner break",
+          "start": {
+            "dateTime": "2025-10-10T20:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          },
+          "end": {
+            "dateTime": "2025-10-10T21:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          }
+        }
+      },
+      {
+        "json": {
+          "title": "♦️ Pedro & Cibelle – Styling & Variations",
+          "start": {
+            "dateTime": "2025-10-10T21:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          },
+          "end": {
+            "dateTime": "2025-10-10T23:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          }
+        }
+      },
+      {
+        "json": {
+          "title": "🍹 Get ready for the party!",
+          "start": {
+            "dateTime": "2025-10-10T23:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          },
+          "end": {
+            "dateTime": "2025-10-11T00:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          }
+        }
+      },
+      {
+        "json": {
+          "title": "🔥 PARTY TIME!",
+          "start": {
+            "dateTime": "2025-10-11T00:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          },
+          "end": {
+            "dateTime": "2025-10-11T03:00:00+02:00",
+            "timeZone": "Europe/Warsaw"
+          }
+        }
+      }
+    ],
+    "Basic LLM Chain": [
+      {
+        "json": {
+          "text": "[\n{\n\"title\": \"♦️ A&L – Drunk step of the leader with multiple turns for the follower + Marcos technique\",\n\"start\": {\n\"dateTime\": \"2025-10-19T12:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-19T14:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"☕ Practice break\",\n\"start\": {\n\"dateTime\": \"2025-10-19T14:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-19T15:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"🍽 Lunch\",\n\"start\": {\n\"dateTime\": \"2025-10-19T15:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-19T16:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"♦️ A&L – Soltinho adding multiple turns of the leader\",\n\"start\": {\n\"dateTime\": \"2025-10-19T16:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-19T17:30:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"☕ Practice break\",\n\"start\": {\n\"dateTime\": \"2025-10-19T17:30:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-19T18:30:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"♦️ A&L – Wi-Fi frango assado possibilities\",\n\"start\": {\n\"dateTime\": \"2025-10-19T18:30:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-19T20:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"🍽 Dinner break\",\n\"start\": {\n\"dateTime\": \"2025-10-19T20:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-19T21:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"♦️ Pedro & Cibelle – Styling & Variations\",\n\"start\": {\n\"dateTime\": \"2025-10-19T21:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-19T23:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"🍹 Get ready for the party!\",\n\"start\": {\n\"dateTime\": \"2025-10-19T23:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T00:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"🔥 PARTY TIME!\",\n\"start\": {\n\"dateTime\": \"2025-10-20T00:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T03:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"☕ Breakfast\",\n\"start\": {\n\"dateTime\": \"2025-10-20T07:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T10:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"📖 Study groups\",\n\"start\": {\n\"dateTime\": \"2025-10-20T10:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T12:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"♦️ A&L – Fake boomerang + Mergulho desprezado + Technique with Marcos\",\n\"start\": {\n\"dateTime\": \"2025-10-20T12:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T14:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"☕ Practice break\",\n\"start\": {\n\"dateTime\": \"2025-10-20T14:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T15:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"🍽 Lunch\",\n\"start\": {\n\"dateTime\": \"2025-10-20T15:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T16:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"♦️ A&L – Shadow pião\",\n\"start\": {\n\"dateTime\": \"2025-10-20T16:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T17:30:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"☕ Practice break\",\n\"start\": {\n\"dateTime\": \"2025-10-20T17:30:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T18:30:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"♦️ A&L – Toalha + bebado + fake boomerang\",\n\"start\": {\n\"dateTime\": \"2025-10-20T18:30:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T20:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"🍽 Dinner break\",\n\"start\": {\n\"dateTime\": \"2025-10-20T20:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T21:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"♦️ Otavio & Sara – Styling & Variations\",\n\"start\": {\n\"dateTime\": \"2025-10-20T21:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-20T23:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"🍹 Get ready for the party!\",\n\"start\": {\n\"dateTime\": \"2025-10-20T23:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-21T00:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n},\n{\n\"title\": \"🔥 PARTY TIME!\",\n\"start\": {\n\"dateTime\": \"2025-10-21T00:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-21T03:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n}\n]"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Format Calendar Data": {
+      "main": [
+        [
+          {
+            "node": "For Each Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "For Each Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "For Each Calendar Event": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create an event1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Delete an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Format Calendar Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event1": {
+      "main": [
+        []
+      ]
+    },
+    "Get many events1": {
+      "main": [
+        [
+          {
+            "node": "Delete an event1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Martinique",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "931d1794-91b6-443b-b437-4a5bec5a7fe0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "9CrqFyQGCrhTdXaM",
+  "tags": []
+}

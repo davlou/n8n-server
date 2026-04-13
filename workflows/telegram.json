@@ -1,0 +1,725 @@
+{
+  "name": "telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fbd9f3f6-a862-46e4-8572-e74767724110",
+      "name": "Telegram Trigger",
+      "webhookId": "49b28bc0-f011-4861-9fa8-ed051d321c21",
+      "credentials": {
+        "telegramApi": {
+          "id": "Axs1lYEaPS6nGgdA",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# How to get this workflow working\n\nThe webhook must be an HTTPS url\n\n## 1. Stop the HTTP n8n if running\n\n```\ndocker ps stop n8n\n```\n\n## 2. Get an HTTPS url with `ngrok`\nSee my own account: https://dashboard.ngrok.com/get-started/setup/linux \n\n```\nngrok http 5678\n```\n\n## 3. Create the HTTPS n8n, delete the existing one first AND replace the webhook url {LOCALTUNNEL_URL} with the localtunnel one just created.\n\n```\ndocker stop n8n-telegram-with-localtunnel-webhook\ndocker rm n8n-telegram-with-localtunnel-webhook\ndocker run -d \\\n  --name n8n-telegram-with-localtunnel-webhook \\\n  -p 5678:5678 \\\n  -v /home/meme/MyProjects/n8n-server-2/n8n-data:/home/node/.n8n \\\n  -e N8N_PORT=5678 \\\n  -e WEBHOOK_URL={NGROK_URL} \\\n  -e N8N_BASIC_AUTH_ACTIVE=false \\\n  n8nio/n8n:latest\n```",
+        "height": 768,
+        "width": 1056
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1232,
+        -608
+      ],
+      "typeVersion": 1,
+      "id": "8f8a9b9a-1aad-4bfe-b5ff-fbcd50d0bee3",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2800,
+        -352
+      ],
+      "id": "7f23421d-b248-4f70-96a3-20514749e7d7",
+      "name": "Send a text message",
+      "webhookId": "50e3d63b-5858-4ac0-94b9-e1fa10003c87",
+      "credentials": {
+        "telegramApi": {
+          "id": "Axs1lYEaPS6nGgdA",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// const audioUrl = \"http://tmpfiles.org/dl/4787206/hello_this_is_me.wav\";\n// // const audioUrl = \"https://tmpfiles.org/4795042/file_0.wav\"\n// const token = \"hf_xxx\";\n// const baseUrl = \"https://daviduk2025-whisper-stt-api.hf.space/gradio_api/call/predict\";\n\n// // Step 1: POST request\n// const postResponse = await this.helpers.httpRequest({\n//   method: 'POST',\n//   url: baseUrl,\n//   headers: {\n//     'Content-Type': 'application/json',\n//     'Authorization': `Bearer ${token}`\n//   },\n//   body: {\n//     data: [{\n//       path: audioUrl,\n//       meta: { _type: \"gradio.FileData\" }\n//     }]\n//   }\n// });\n\n// const eventId = postResponse.event_id;\n\n// // Step 2: GET request\n// const getResponse = await this.helpers.httpRequest({\n//   method: 'GET',\n//   url: `${baseUrl}/${eventId}`,\n//   headers: {\n//     'Authorization': `Bearer ${token}`\n//   }\n// });\n\n// // Parse the streaming response to get final transcription\n// const lines = getResponse.split('\\n');\n// let transcription = '';\n\n// for (const line of lines) {\n//   if (line.startsWith('data: ')) {\n//     try {\n//       const data = JSON.parse(line.substring(6));\n//       if (Array.isArray(data)) {\n//         transcription = data[0];\n//       }\n//     } catch (e) {}\n//   }\n// }\n\n// return [{ json: { transcription } }];\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n// const telegramData = $input.first().json;\n\n// // Check if there's a voice/audio message\n// if (!telegramData.message?.voice && !telegramData.message?.audio) {\n//   throw new Error('No audio file found in Telegram message');\n// }\n\n// // Get the file info\n// const audioFile = telegramData.message.voice || telegramData.message.audio;\n// const fileId = audioFile.file_id;\n\n// // Your Telegram bot token\n// const telegramToken = \"8092334198:AAFDPTVmaasrpdvakkBT2wRWTQqlvYS758c\";\n\n// // Step 1: Get file path from Telegram\n// const fileInfoResponse = await this.helpers.httpRequest({\n//   method: 'GET',\n//   url: `https://api.telegram.org/bot${telegramToken}/getFile?file_id=${fileId}`,\n//   json: true\n// });\n\n// const filePath = fileInfoResponse.result.file_path;\n// const fileUrl = `https://api.telegram.org/file/bot${telegramToken}/${filePath}`;\n// const fileUrl = \"http://tmpfiles.org/dl/4787206/hello_this_is_me.wav\"\n// const fileUrl = \"http://tmpfiles.org/dl/4795042/file_0.wav\"\n// const fileUrl = \"https://drive.google.com/uc?id=1gvjRdobqXEJGDER4-wn_W-E_If1Wtx2x\"\nconst fileUrl = \"http://tmpfiles.org/dl/4803544/fresh.wav\"\n\n// Step 2: Call Whisper API\nconst token = \"hf_xxx\";\nconst baseUrl = \"https://daviduk2025-whisper-stt-api.hf.space/gradio_api/call/predict\";\n\nconst postResponse = await this.helpers.httpRequest({\n  method: 'POST',\n  url: baseUrl,\n  headers: {\n    'Content-Type': 'application/json',\n    'Authorization': `Bearer ${token}`\n  },\n  body: {\n    data: [{\n      path: fileUrl,\n      meta: { _type: \"gradio.FileData\" }\n    }]\n  },\n  json: true\n});\n\nconst eventId = postResponse.event_id;\n\n// Step 3: Wait longer for processing (5 seconds)\nawait new Promise(resolve => setTimeout(resolve, 5000));\n\n// Step 4: Get transcription result\nconst getResponse = await this.helpers.httpRequest({\n  method: 'GET',\n  url: `${baseUrl}/${eventId}`,\n  headers: {\n    'Authorization': `Bearer ${token}`\n  }\n});\n\n// Step 5: Parse the streaming response\nconst lines = getResponse.split('\\n');\nlet transcription = '';\nlet rawResponse = getResponse; // Keep for debugging\n\nfor (const line of lines) {\n  if (line.startsWith('data: ')) {\n    try {\n      const data = JSON.parse(line.substring(6));\n      if (Array.isArray(data) && data.length > 0) {\n        transcription = data[0];\n      }\n    } catch (e) {}\n  }\n}\n\n// Return with debug info\nreturn [{\n  json: {\n    content: transcription,\n    type: 'audio',\n    // duration: audioFile.duration,\n    // from: telegramData.message.from.first_name,\n    // user_id: telegramData.message.from.id,\n    // chat_id: telegramData.message.chat.id,\n    // message_id: telegramData.message.message_id,\n    file_url: fileUrl,\n    debug_raw_response: rawResponse,\n    debug_event_id: eventId\n  }\n}];\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n// // 0️⃣ Access binary data from previous node\n// const fileBinary = $input.first().binary?.data; // 'data' is the binary property name\n// if (!fileBinary) throw new Error('No binary data found from previous node');\n\n// // 1️⃣ Convert base64 to Buffer\n// const buffer = Buffer.from(fileBinary.data, 'base64');\n\n// // 2️⃣ Prepare Whisper API request\n// const token = \"hf_xxx\";\n// const baseUrl = \"https://daviduk2025-whisper-stt-api.hf.space/gradio_api/call/predict\";\n\n// // 3️⃣ Send file to Whisper\n// const postResponse = await this.helpers.httpRequest({\n//   method: 'POST',\n//   url: baseUrl,\n//   headers: { 'Authorization': `Bearer ${token}` },\n//   formData: {\n//     file: {\n//       value: buffer,\n//       options: {\n//         filename: $input.first().json.originalFilename || 'audio.ogg',\n//         contentType: `audio/${$input.first().json.fileExtension || 'ogg'}`\n//       }\n//     }\n//   },\n//   json: true\n// });\n\n// // 4️⃣ Get event_id\n// const eventId = postResponse?.event_id;\n// if (!eventId) throw new Error('Whisper API did not return event_id');\n\n// // 5️⃣ Wait for processing\n// await new Promise(resolve => setTimeout(resolve, 5000));\n\n// // 6️⃣ Fetch transcription\n// const getResponse = await this.helpers.httpRequest({\n//   method: 'GET',\n//   url: `${baseUrl}/${eventId}`,\n//   headers: { 'Authorization': `Bearer ${token}` },\n//   json: false\n// });\n\n// // 7️⃣ Parse SSE response\n// let transcription = '';\n// for (const line of getResponse.split('\\n')) {\n//   if (line.startsWith('data: ')) {\n//     try {\n//       const data = JSON.parse(line.substring(6));\n//       if (Array.isArray(data) && data.length > 0) transcription = data[0];\n//     } catch {}\n//   }\n// }\n\n// // 8️⃣ Return result\n// return [{\n//   json: {\n//     transcription,\n//     original_filename: $input.first().json.originalFilename || 'audio',\n//     file_extension: $input.first().json.fileExtension || 'ogg',\n//     debug_raw_response: getResponse,\n//     event_id: eventId\n//   }\n// }];\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n// const fileUrl = \"https://drive.google.com/uc?id=1gvjRdobqXEJGDER4-wn_W-E_If1Wtx2x&export=download\";\n\n// // Step 2: Call Whisper API\n// const token = \"hf_xxx\";\n// const baseUrl = \"https://daviduk2025-whisper-stt-api.hf.space/gradio_api/call/predict\";\n\n// const postResponse = await this.helpers.httpRequest({\n//   method: 'POST',\n//   url: baseUrl,\n//   headers: {\n//     'Content-Type': 'application/json',\n//     'Authorization': `Bearer ${token}`\n//   },\n//   body: {\n//     data: [{\n//       path: fileUrl,\n//       meta: { _type: \"gradio.FileData\" }\n//     }]\n//   },\n//   json: true\n// });\n\n// const eventId = postResponse.event_id;\n\n// // Step 3: Wait longer for processing (5 seconds)\n// await new Promise(resolve => setTimeout(resolve, 5000));\n\n// // Step 4: Get transcription result\n// const getResponse = await this.helpers.httpRequest({\n//   method: 'GET',\n//   url: `${baseUrl}/${eventId}`,\n//   headers: {\n//     'Authorization': `Bearer ${token}`\n//   }\n// });\n\n// // Step 5: Parse the streaming response\n// const lines = getResponse.split('\\n');\n// let transcription = '';\n// let rawResponse = getResponse; // Keep for debugging\n\n// for (const line of lines) {\n//   if (line.startsWith('data: ')) {\n//     try {\n//       const data = JSON.parse(line.substring(6));\n//       if (Array.isArray(data) && data.length > 0) {\n//         transcription = data[0];\n//       }\n//     } catch (e) {}\n//   }\n// }\n\n// // Return with debug info\n// return [{\n//   json: {\n//     content: transcription,\n//     type: 'audio',\n//     file_url: fileUrl,\n//     debug_raw_response: rawResponse,\n//     debug_event_id: eventId\n//   }\n// }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        -928
+      ],
+      "id": "598f86da-58e9-46e7-92e3-652de1ff55ab",
+      "name": "Transcribe Audio HF"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "d871557c-5a9e-4706-a4f9-6373ddce1df7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f2f99dcb-7553-4303-afdb-10379e811d30",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "affb04f9-56b8-48e6-b793-ff56f59223b2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const telegramData = $input.first().json;\n\nif (!telegramData.message?.voice && !telegramData.message?.audio) {\n  throw new Error('No audio file found in Telegram message');\n}\n\nconst audioFile = telegramData.message.voice || telegramData.message.audio;\nconst fileId = audioFile.file_id;\nconst telegramToken = \"8092334198:AAFDPTVmaasrpdvakkBT2wRWTQqlvYS758c\";\n\n// 1️⃣ Get Telegram file path\nconst fileInfo = await this.helpers.httpRequest({\n  method: 'GET',\n  url: `https://api.telegram.org/bot${telegramToken}/getFile?file_id=${fileId}`,\n  json: true\n});\n\nconst filePath = fileInfo.result.file_path;\nconst downloadUrl = `https://api.telegram.org/file/bot${telegramToken}/${filePath}`;\n\n// 2️⃣ Download binary\nlet fileBinaryRaw = await this.helpers.httpRequest({\n  method: 'GET',\n  url: downloadUrl,\n  encoding: null,\n  json: false\n});\n\n// 3️⃣ Convert to Buffer\nconst fileBuffer = Buffer.isBuffer(fileBinaryRaw)\n  ? fileBinaryRaw\n  : Buffer.from(fileBinaryRaw);\n\n// 4️⃣ Prepare n8n binary data\nconst binaryData = await this.helpers.prepareBinaryData(fileBuffer, audioFile.file_unique_id + '.ogg');\n\n// 5️⃣ Return for Google Drive node\nreturn [{\n  binary: { data: binaryData },\n  json: { telegram_file_url: downloadUrl }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -464
+      ],
+      "id": "acd6c6ab-cdcb-4f46-ac31-85860122afd4",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/tmp/{{ $json.telegram_file_url.split(\"/\").last() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        768,
+        -1504
+      ],
+      "id": "8c47e125-2b82-4382-a157-64553eaee8c0",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2160,
+        -1360
+      ],
+      "id": "62a3cfb4-d896-4d26-9ddd-2b8a72e1d97b",
+      "name": "Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dUUl1HLAX7266RrF",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "68b21834-33f8-4efe-ae63-390ef815e0c0",
+              "name": "public_url",
+              "value": "={{ $('Upload file').item.json.webContentLink }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2368,
+        -1360
+      ],
+      "id": "96a4f4df-125f-4006-951c-4f5f42ebbc94",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -1136
+      ],
+      "id": "3e94c46b-a628-4f3c-a361-616773dc2048",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1952,
+        -1360
+      ],
+      "id": "50f3e600-25d8-49b3-ae1e-aa191e523ba8",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dUUl1HLAX7266RrF",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=ffmpeg -i {{ $json.fileName }} -ar 16000 -ac 1 {{ $json.fileName }}.wav"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        960,
+        -1504
+      ],
+      "id": "613151c3-b874-4394-aae9-edf971bc8294",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://daviduk2025-whisper-stt-api.hf.space/gradio_api/call/predict",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer hf_xxx"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"path\": \"data:audio/ogg;base64,{{ $json.stdout }}\",\n      \"meta\": {\n        \"_type\": \"gradio.FileData\"\n      }\n    }\n  ]\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        -1280
+      ],
+      "id": "65ac13d6-1d68-40b0-942e-6aee4ada71d9",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "url": "=https://daviduk2025-whisper-stt-api.hf.space/gradio_api/call/predict/{{ $json.event_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer hf_xxx"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        -1248
+      ],
+      "id": "13666942-7aab-4a32-b015-e2a74a37cea8",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "command": "=wget \"{{ $json.telegram_file_url }}\" -O /tmp/telegram_audio.oga && echo \"/tmp/telegram_audio.oga\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        864,
+        -688
+      ],
+      "id": "362c8c35-2469-4dc3-8f8a-16b85a5402fb",
+      "name": "Dowload file to disk"
+    },
+    {
+      "parameters": {
+        "executeOnce": "",
+        "command": "=curl -F \"file=@{{ $json.stdout }}\" https://tmpfiles.org/api/v1/upload"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        -688
+      ],
+      "id": "3ab1368d-b7b1-4720-b79c-a40fa5d5c06d",
+      "name": "Upload file to tmpfiles.org"
+    },
+    {
+      "parameters": {
+        "command": "=ffmpeg -y -i {{ $json.stdout }} -ar 16000 -ac 1 {{ $json.stdout }}.wav && echo \"/tmp/telegram_audio.oga.wav\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        -688
+      ],
+      "id": "fe8ac585-92d4-4fe5-a957-ee2dad9353a2",
+      "name": "Execute Command1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://daviduk2025-whisper-stt-api.hf.space/gradio_api/call/predict",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer hf_xxx"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"path\": \"{{ $json.stdout.parseJson().data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/') }}\",\n      \"meta\": {\n        \"_type\": \"gradio.FileData\"\n      }\n    }\n  ]\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1648,
+        -688
+      ],
+      "id": "e34f1798-1fca-4fc5-9c3b-cb1d446909c5",
+      "name": "Transcribe with HF 1/2"
+    },
+    {
+      "parameters": {
+        "url": "=https://daviduk2025-whisper-stt-api.hf.space/gradio_api/call/predict/{{ $json.event_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer hf_xxx"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1824,
+        -688
+      ],
+      "id": "84f7b4a5-fa4a-45bf-99e4-578a588cf92b",
+      "name": "Transcribe with HF 2/2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2576,
+        -352
+      ],
+      "id": "a8df43ac-f236-4bf2-bc6d-2f5bc0acecf2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d92a6deb-57e0-4979-bcc3-d9007e329d2c",
+              "name": "=text",
+              "value": "={{ $json[\"data\"].match(/data: \\[\"([^\"]+)\"\\]/)[1].trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2032,
+        -688
+      ],
+      "id": "193b2f3d-33fd-4fb3-a0ea-e02727da1b34",
+      "name": "Set text reply"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d54a7ffb-3592-4cbf-99fc-d639f7e54196",
+              "name": "text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2064,
+        16
+      ],
+      "id": "f86f8fda-b70e-4d4a-a47e-b84a24f37a92",
+      "name": "Set text reply1"
+    },
+    {
+      "parameters": {
+        "content": "## Execution within the docker container\n\n`wget` already part of the docker images\n`ffmpeg` installed manually for now with `apk update && apk add ffmpeg`\n`curl` installed manually for now with `apk update && apk add curl`\n\n### TODO\n* Install `ffmpeg` and `curl` as part of container setup. say in a docker-compose.yml file\n\n",
+        "height": 448,
+        "width": 736
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        784,
+        -912
+      ],
+      "typeVersion": 1,
+      "id": "04bda892-4962-455f-aaa2-bba31b59aa30",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Audio Transcription on Hugging Face Spaces\n\nhttps://huggingface.co/spaces/Daviduk2025/whisper-stt-api\n\ndaviduk@h... / Huggingface2025",
+        "height": 448,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1600,
+        -912
+      ],
+      "typeVersion": 1,
+      "id": "20eb1e78-99c5-40e0-ac40-6f1a28095236",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set text reply1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe Audio HF": {
+      "main": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Dowload file to disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        []
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dowload file to disk": {
+      "main": [
+        [
+          {
+            "node": "Execute Command1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file to tmpfiles.org": {
+      "main": [
+        [
+          {
+            "node": "Transcribe with HF 1/2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command1": {
+      "main": [
+        [
+          {
+            "node": "Upload file to tmpfiles.org",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe with HF 1/2": {
+      "main": [
+        [
+          {
+            "node": "Transcribe with HF 2/2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe with HF 2/2": {
+      "main": [
+        [
+          {
+            "node": "Set text reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set text reply": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set text reply1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7fd3f766-227e-4c53-b1b2-e8d7c63cb6ad",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "FcqSPT1GEUNp6w3r",
+  "tags": []
+}

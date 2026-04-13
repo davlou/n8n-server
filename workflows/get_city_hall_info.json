@@ -1,0 +1,1317 @@
+{
+  "name": "get_city_hall_info",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        592
+      ],
+      "id": "61d1c6a3-78a6-4125-97fb-21873ecd640f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk",
+          "mode": "list",
+          "cachedResultName": "city_halls",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1309778104,
+          "mode": "list",
+          "cachedResultName": "city_halls",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk/edit#gid=1309778104"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "a077f146-e22e-43ac-9b71-b2713a191231",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "e140405a-b21a-48a3-a7f0-7e6ba2a0eb7f",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.link }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        160
+      ],
+      "id": "a014a3f1-7900-4771-b194-b12e65a9a7ed",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "website",
+              "cssSelector": "ul[data-test=\"contacts\"] li[data-test=\"websites\"] a"
+            },
+            {
+              "key": "email",
+              "cssSelector": "ul[data-test=\"contacts\"] li[data-test=\"contactCourriel\"] a"
+            },
+            {
+              "key": "phone",
+              "cssSelector": "ul[data-test=\"contacts\"] li[data-test=\"tel\"] a"
+            },
+            {
+              "key": "fax",
+              "cssSelector": "ul[data-test=\"contacts\"] li[data-test=\"fax\"] a"
+            },
+            {
+              "key": "street",
+              "cssSelector": "p[data-test=\"adaAddress-bloc\"] span[itemprop=\"streetAddress\"]"
+            },
+            {
+              "key": "postcode",
+              "cssSelector": "p[data-test=\"adaAddress-bloc\"] span[itemprop=\"postalCode\"]"
+            },
+            {
+              "key": "city",
+              "cssSelector": "p[data-test=\"adaAddress-bloc\"] span[itemprop=\"addressLocality\"]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        160
+      ],
+      "id": "b02906a1-8d9f-4466-8a46-fbdb0978dd9e",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk",
+          "mode": "list",
+          "cachedResultName": "city_halls",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1309778104,
+          "mode": "list",
+          "cachedResultName": "city_halls",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk/edit#gid=1309778104"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "website": "={{ $json.website }}",
+            "email": "={{ $json.email }}",
+            "phone": "={{ $json.phone }}",
+            "fax": "={{ $json.fax }}",
+            "city_hall": "={{ $('Loop Over Items').item.json.city_hall }}",
+            "street": "={{ $json.street }}",
+            "postcode": "={{ $json.postcode }}",
+            "city": "={{ $json.city }}"
+          },
+          "matchingColumns": [
+            "city_hall"
+          ],
+          "schema": [
+            {
+              "id": "city_hall",
+              "displayName": "city_hall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fax",
+              "displayName": "fax",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "street",
+              "displayName": "street",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "postcode",
+              "displayName": "postcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1280,
+        160
+      ],
+      "id": "1cdd274e-5397-4ff3-923f-5049015aa3ec",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1072,
+        160
+      ],
+      "id": "91cfeac1-5bb7-4bb2-beff-5947c8889550",
+      "name": "Wait",
+      "webhookId": "924610f6-2544-4846-8357-a49a6315fa81"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1136,
+        592
+      ],
+      "id": "4437301b-24bf-4bad-a53a-e4be4ad9af74",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk",
+          "mode": "list",
+          "cachedResultName": "city_halls",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1309778104,
+          "mode": "list",
+          "cachedResultName": "city_halls",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk/edit#gid=1309778104"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "postcode": "={{ $json[\"Code de la commune\"] }}",
+            "mayor": "={{ $json[\"Nom de l'élu\"] }} {{ $json[\"Prénom de l'élu\"] }}"
+          },
+          "matchingColumns": [
+            "postcode"
+          ],
+          "schema": [
+            {
+              "id": "city_hall",
+              "displayName": "city_hall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "fax",
+              "displayName": "fax",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "street",
+              "displayName": "street",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "postcode",
+              "displayName": "postcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mayor",
+              "displayName": "mayor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1664,
+        608
+      ],
+      "id": "71d45f0d-38cd-455d-9de6-c1433f7a5f70",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "postcode",
+              "field2": "Code de la commune"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        736,
+        592
+      ],
+      "id": "bd87e4cc-24f0-473a-bdaf-ccbf3d98cd75",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        608
+      ],
+      "id": "9426a5b4-e6ba-4617-9773-33e59f5edd66",
+      "name": "Wait1",
+      "webhookId": "3971a54a-dd03-4ce8-88db-5e1be512057c"
+    },
+    {
+      "parameters": {
+        "content": "## Insert city info from https://lannuaire.service-public.fr/recherche?whoWhat=mairie&where=972",
+        "height": 464,
+        "width": 1728
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "565fde76-0c35-4a21-a01c-2e297ac06eb0",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Update mayor info from https://www.data.gouv.fr/datasets/repertoire-national-des-elus-1/",
+        "height": 400,
+        "width": 1728
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        448
+      ],
+      "typeVersion": 1,
+      "id": "1c6e7f6f-2901-4917-ae4d-0a898f6ad315",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk",
+          "mode": "list",
+          "cachedResultName": "city_halls",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1309778104,
+          "mode": "list",
+          "cachedResultName": "city_halls",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15_sx7OmKKSH3z3LNXVzR7ydmUY2NsRuh_f9rraGA5Fk/edit#gid=1309778104"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        496
+      ],
+      "id": "cdc7a04f-a621-46a3-9781-88acbebc892f",
+      "name": "Get row(s) in city_hall",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "15LvYU5Jvr-nU1822E-r1_AQMD0p0bg5Z-oLNv8InDos",
+          "mode": "list",
+          "cachedResultName": "registre_national_des_elus",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15LvYU5Jvr-nU1822E-r1_AQMD0p0bg5Z-oLNv8InDos/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1886682325,
+          "mode": "list",
+          "cachedResultName": "elus-conseillers-municipaux-cm",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15LvYU5Jvr-nU1822E-r1_AQMD0p0bg5Z-oLNv8InDos/edit#gid=1886682325"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        672
+      ],
+      "id": "58a98b16-9bcb-495d-bd5c-c3266f5ed8cc",
+      "name": "Get row(s) in RNE register",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a435f078-8c03-4e41-b098-669438d56c2e",
+              "leftValue": "={{ $json[\"Code de la commune\"] }}",
+              "rightValue": 97200,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "d6087b49-5437-44de-8e21-b980229c0c8c",
+              "leftValue": "={{ $json[\"Code de la commune\"] }}",
+              "rightValue": 97299,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        672
+      ],
+      "id": "99ef2b3a-5dd1-4e42-ba75-9ec2b89b9dc5",
+      "name": "If"
+    }
+  ],
+  "pinData": {
+    "Get row(s) in city_hall": [
+      {
+        "json": {
+          "row_number": 2,
+          "city_hall": "Mairie - Le Lamentin - Le Lamentin",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/029e81ab-67d0-4fad-85ec-f8ac9212ce31",
+          "website": "http://www.mairie-lelamentin.fr",
+          "email": "contact@mairie-lelamentin.fr",
+          "phone": "05 96 66 68 88",
+          "fax": "05 96 51 67 88",
+          "street": "Place Antonio-Macéo",
+          "postcode": 97232,
+          "city": "Le Lamentin",
+          "mayor": "FARREAUX Jimmy"
+        }
+      },
+      {
+        "json": {
+          "row_number": 3,
+          "city_hall": "Mairie - Macouba - Macouba",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/0323a7a7-8ec6-412d-91b0-3c799b503c6a",
+          "website": "",
+          "email": "dgsmairiemacouba@gmail.com",
+          "phone": "05 96 78 53 68",
+          "fax": "05 96 78 59 42",
+          "street": "Rue Victor-Hugo",
+          "postcode": 97218,
+          "city": "Macouba",
+          "mayor": "DULYS-PETIT Jenny"
+        }
+      },
+      {
+        "json": {
+          "row_number": 4,
+          "city_hall": "Mairie - Le Carbet - Le Carbet",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/11810d3d-56db-43f2-866a-075fa675f1a7",
+          "website": "https://www.villeducarbet.fr/",
+          "email": "mairie@villeducarbet.fr",
+          "phone": "05 96 78 00 40",
+          "fax": "05 96 78 06 54",
+          "street": "1 place Jules-Grevy",
+          "postcode": 97221,
+          "city": "Le Carbet",
+          "mayor": "LESUEUR André"
+        }
+      },
+      {
+        "json": {
+          "row_number": 5,
+          "city_hall": "Mairie - Le Marin - Le Marin",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/16158bbc-be57-4398-b93d-767449a971f1",
+          "website": "",
+          "email": "ville-marin@wanadoo.fr",
+          "phone": "05 96 74 90 02",
+          "fax": "05 96 74 96 60",
+          "street": "26 rue Osman-Duquesnay",
+          "postcode": 97290,
+          "city": "Le Marin",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 6,
+          "city_hall": "Mairie - Marigot - Le Marigot",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/1b0c6a82-5e65-47f0-8f34-ec30ace3a0ed",
+          "website": "",
+          "email": "ville@97225marigot.com",
+          "phone": "05 96 53 50 09",
+          "fax": "05 96 53 54 83",
+          "street": "Lotissement La Marie",
+          "postcode": 97225,
+          "city": "Le Marigot",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 7,
+          "city_hall": "Mairie - Le Lorrain - Le Lorrain",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/25917ab3-62e8-49a4-87d9-cf8e880993bc",
+          "website": "https://villedulorrain.com/v2/",
+          "email": "secretariatgeneral@villedulorrain.com",
+          "phone": "05 96 53 44 22",
+          "fax": "",
+          "street": "8 rue Joseph-Lagrosilière",
+          "postcode": 97214,
+          "city": "Le Lorrain",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 8,
+          "city_hall": "Mairie - Ducos - Ducos",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/43efc528-f165-40ff-838c-392f2a6155bc",
+          "website": "https://www.villededucos.fr/",
+          "email": "courrier@mairie-ducos.fr",
+          "phone": "05 96 77 18 18",
+          "fax": "",
+          "street": "1 rue Zizine-et-des-Étages",
+          "postcode": 97224,
+          "city": "Ducos",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 9,
+          "city_hall": "Mairie - Le Diamant - Le Diamant",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/46489f37-863b-4e2f-9be6-790adbd3adb5",
+          "website": "https://villedudiamant.fr/",
+          "email": "contact@mairie-diamant.fr",
+          "phone": "05 96 76 40 11",
+          "fax": "05 96 76 18 35",
+          "street": "45 rue Justin-Roc",
+          "postcode": 97223,
+          "city": "Le Diamant",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 10,
+          "city_hall": "Mairie - Le François - Le François",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/51f8f2f5-00d0-4f79-8544-031a8270fba9",
+          "website": "",
+          "email": "service.courrier@ville-francois.fr",
+          "phone": "05 96 54 30 02",
+          "fax": "05 96 54 14 77",
+          "street": "Place Charles-de-Gaulle",
+          "postcode": 97240,
+          "city": "Le François",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 11,
+          "city_hall": "Mairie - Le Robert - Le Robert",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/63bfb107-6390-4788-be00-5d38c88fa72c",
+          "website": "http://www.ville-robert.fr",
+          "email": "contact@ville-robert.fr",
+          "phone": "05 96 65 10 05",
+          "fax": "05 96 65 13 10",
+          "street": "Rue Vincent-Allègre",
+          "postcode": 97231,
+          "city": "Le Robert",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 12,
+          "city_hall": "Mairie - Le Vauclin - Le Vauclin",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/70e51cd4-bfa4-4f0e-9ff0-6f4736a900b2",
+          "website": "https://ville-vauclin.fr/",
+          "email": "cabinet@mairie-vauclin.fr",
+          "phone": "05 96 74 40 40",
+          "fax": "",
+          "street": "2 rue Collignon",
+          "postcode": 97280,
+          "city": "Le Vauclin",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 13,
+          "city_hall": "Mairie - La Trinité - La Trinité",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/91224c84-fb42-4957-afd7-603a0cdebb29",
+          "website": "https://www.mairie-latrinite.fr/",
+          "email": "contact@mairie-latrinite.fr",
+          "phone": "05 96 58 20 12",
+          "fax": "",
+          "street": "51 avenue Casimir-Branglidor",
+          "postcode": 97220,
+          "city": "La Trinité",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 14,
+          "city_hall": "Mairie - Prêcheur - Le Prêcheur",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/af886d10-c909-4d1e-8b2a-b67c3c10fd56",
+          "website": "",
+          "email": "secretariat@mairie-precheur.com",
+          "phone": "05 96 52 98 62",
+          "fax": "05 96 52 92 02",
+          "street": "Le Bourg",
+          "postcode": 97250,
+          "city": "Le Prêcheur",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 15,
+          "city_hall": "Mairie - Schœlcher - Schœlcher",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/c20cacec-6aca-4ed6-8881-0617b9b3e946",
+          "website": "https://www.mairie-schoelcher.fr/",
+          "email": "mschoelcher@mairie-schoelcher.com",
+          "phone": "05 96 72 72 72",
+          "fax": "05 96 61 36 78",
+          "street": "3 rue Fessenheim",
+          "postcode": 97233,
+          "city": "Schœlcher",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 16,
+          "city_hall": "Mairie - Bellefontaine - Bellefontaine",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/c4a22c3e-ccbd-4c9d-bc5f-45b45faba22d",
+          "website": "",
+          "email": "mairie@ville-bellefontaine.fr",
+          "phone": "05 96 55 00 96",
+          "fax": "05 96 55 00 58",
+          "street": "Place Simon-Charles-François",
+          "postcode": 97222,
+          "city": "Bellefontaine",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 17,
+          "city_hall": "Mairie - Sainte-Anne - Sainte-Anne",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/04b7d5c8-f0b3-4c93-97e8-8fca136990eb",
+          "website": "http://www.sainte-anne972.fr",
+          "email": "",
+          "phone": "05 96 76 73 06",
+          "fax": "05 96 76 76 95",
+          "street": "1 place Abbé-Morland",
+          "postcode": 97227,
+          "city": "Sainte-Anne",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 18,
+          "city_hall": "Mairie - Les Anses-d'Arlet - Les Anses-d'Arlet",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/07627f59-349d-4ff7-9eab-30c312b8c94e",
+          "website": "https://ville-ansesdarlet.fr",
+          "email": "mairie@mairie-anses-arlet.fr",
+          "phone": "05 96 68 62 02",
+          "fax": "05 96 68 68 38",
+          "street": "Rue Félix Éboué",
+          "postcode": 97217,
+          "city": "Les Anses-d'Arlet",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 19,
+          "city_hall": "Mairie - Les Trois-Îlets - Les Trois-Îlets",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/0ee1394a-9c8f-41e0-a6e4-c72f9de55465",
+          "website": "https://villedestroisilets.com/",
+          "email": "secretariat@mairie-trois-ilets.fr",
+          "phone": "05 96 68 31 11",
+          "fax": "05 96 68 30 39",
+          "street": "1 rue Épiphane-de-Moirans",
+          "postcode": 97229,
+          "city": "Les Trois-Îlets",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 20,
+          "city_hall": "Mairie - Fort-de-France - Fort-de-France",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/11e855c1-7e2e-41fc-adeb-afa1596a93fd",
+          "website": "https://www.fortdefrance.fr/",
+          "email": "contact@fortdefrance.fr",
+          "phone": "05 96 59 60 00",
+          "fax": "05 96 60 91 69",
+          "street": "Rue Victor-Sevère",
+          "postcode": 97200,
+          "city": "Fort-de-France",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 21,
+          "city_hall": "Mairie - Ajoupa-Bouillon - L'Ajoupa-Bouillon",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/1e6fa274-9851-4fb6-82a4-51970221a4cd",
+          "website": "",
+          "email": "mairie.ajoupabouillon@wanadoo.fr",
+          "phone": "05 96 53 32 22",
+          "fax": "05 96 53 35 20",
+          "street": "Le Bourg",
+          "postcode": 97216,
+          "city": "L'Ajoupa-Bouillon",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 22,
+          "city_hall": "Mairie - Le Morne-Vert - Le Morne-Vert",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/4aeb83c6-be08-4fd0-925b-462c914dd1ef",
+          "website": "http://www.morne-vert.fr",
+          "email": "mairie@morne-vert.fr",
+          "phone": "05 96 55 51 47",
+          "fax": "",
+          "street": "Rue Louis-Morin",
+          "postcode": 97226,
+          "city": "Le Morne-Vert",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 23,
+          "city_hall": "Mairie - Saint-Pierre - Saint-Pierre",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/4fe1e1ce-e1aa-42e2-b01d-057541e8eb24",
+          "website": "https://www.saintpierre-mq.fr",
+          "email": "contact@saintpierre-mq.fr",
+          "phone": "05 96 78 10 32",
+          "fax": "",
+          "street": "35 rue Caylus",
+          "postcode": 97250,
+          "city": "Saint-Pierre",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 24,
+          "city_hall": "Mairie - Saint-Joseph - Saint-Joseph",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/535f7b76-2e19-49f0-8988-a56a463dbea3",
+          "website": "https://saintjoseph972.com",
+          "email": "courrier@stjoseph972.fr",
+          "phone": "05 96 57 60 06",
+          "fax": "",
+          "street": "8 rue de la République",
+          "postcode": 97212,
+          "city": "Saint-Joseph",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 25,
+          "city_hall": "Mairie - Rivière-Pilote - Rivière-Pilote",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/58b4e4b6-1006-4959-ad82-2fecee12168d",
+          "website": "",
+          "email": "secretariat@mairie-riviere-pilote.fr",
+          "phone": "05 96 62 60 03",
+          "fax": "",
+          "street": "Avenue des Insurrections-Anti-Esclavagistes",
+          "postcode": 97211,
+          "city": "Rivière-Pilote",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 26,
+          "city_hall": "Mairie - Le Morne-Rouge - Le Morne-Rouge",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/681274a5-9968-4d67-b80a-7f31d4665805",
+          "website": "",
+          "email": "mairie@ville-mornerouge.fr",
+          "phone": "05 96 52 30 23",
+          "fax": "05 96 52 39 64",
+          "street": "Avenue Edgard-Nestoret",
+          "postcode": 97260,
+          "city": "Le Morne-Rouge",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 27,
+          "city_hall": "Mairie - Fonds-Saint-Denis - Fonds-Saint-Denis",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/6868f0c7-f088-4e29-963e-6173f0baa8dd",
+          "website": "",
+          "email": "mairie.fondssaint-denis@wanadoo.fr",
+          "phone": "05 96 55 88 88",
+          "fax": "05 96 55 82 91",
+          "street": "Le Bourg",
+          "postcode": 97250,
+          "city": "Fonds-Saint-Denis",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 28,
+          "city_hall": "Mairie - Saint-Esprit - Saint-Esprit",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/6a222ee2-5751-4768-92bd-7a17977a9ad4",
+          "website": "https://www.villedusaintesprit.fr/",
+          "email": "secretariat@mairie-saint-esprit.fr",
+          "phone": "05 96 56 61 02",
+          "fax": "",
+          "street": "Rue Schoelcher",
+          "postcode": 97270,
+          "city": "Saint-Esprit",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 29,
+          "city_hall": "Mairie - Sainte-Marie - Sainte-Marie",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/9cf82664-42cb-4757-81c7-29bee8b15293",
+          "website": "http://www.ville-saintemarie.fr",
+          "email": "secretariat.cabinet.vsm@gmail.com",
+          "phone": "05 96 69 30 06",
+          "fax": "05 96 69 03 05",
+          "street": "1 place de l'Hôtel-de-Ville",
+          "postcode": 97230,
+          "city": "Sainte-Marie",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 30,
+          "city_hall": "Mairie - Case-Pilote - Case-Pilote",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/abe5569b-6d2d-4e0e-806c-31636812d7ff",
+          "website": "https://mairiecasepilote.fr/",
+          "email": "contact@mairiecasepilote.fr",
+          "phone": "05 96 78 81 44",
+          "fax": "05 96 78 74 72",
+          "street": "Place Gaston-Monnerville",
+          "postcode": 97222,
+          "city": "Case-Pilote",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 31,
+          "city_hall": "Mairie - Le Gros-Morne - Gros-Morne",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/b14652f2-24b2-414d-902c-607d6450386f",
+          "website": "",
+          "email": "contact.mairie@ville-grosmorne.fr",
+          "phone": "05 96 67 50 11",
+          "fax": "",
+          "street": "2 rue du Docteur Yviane Seraline",
+          "postcode": 97213,
+          "city": "Gros-Morne",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 32,
+          "city_hall": "Mairie - Basse-Pointe - Basse-Pointe",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/b7469735-36a1-405a-80c1-d6197f2d8cd9",
+          "website": "https://villedebassepointe.fr",
+          "email": "contact@villedebassepointe.fr",
+          "phone": "05 96 78 50 44",
+          "fax": "05 96 78 97 16",
+          "street": "22 rue du Docteur Hippolyte Morestin",
+          "postcode": 97218,
+          "city": "Basse-Pointe",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 33,
+          "city_hall": "Mairie - Sainte-Luce - Sainte-Luce",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/be063e2e-bd55-4306-9b9c-75b6b6ca3c53",
+          "website": "https://www.sainteluce.fr/accueil.php",
+          "email": "bienvenue@mairie-sainte-luce.fr",
+          "phone": "05 96 62 50 01",
+          "fax": "",
+          "street": "61 rue Schoelcher",
+          "postcode": 97228,
+          "city": "Sainte-Luce",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 34,
+          "city_hall": "Mairie - Grand'Rivière - Grand'Rivière",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/bfd68e11-b915-4515-a77d-08461f895280",
+          "website": "https://www.grand-riviere.com/",
+          "email": "",
+          "phone": "05 96 55 77 77",
+          "fax": "",
+          "street": "71 avenue du Général-de-Gaulle",
+          "postcode": 97218,
+          "city": "Grand'Rivière",
+          "mayor": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 35,
+          "city_hall": "Mairie - Rivière-Salée - Rivière-Salée",
+          "link": "https://lannuaire.service-public.fr/martinique/martinique/e2e8a478-c242-4944-bda6-4c17fd9e01b5",
+          "website": "",
+          "email": "secretariat@mairie-riviere-salee.fr",
+          "phone": "05 96 68 01 90",
+          "fax": "",
+          "street": "Quartier Laugier",
+          "postcode": 97215,
+          "city": "Rivière-Salée",
+          "mayor": ""
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in RNE register",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get row(s) in city_hall",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in city_hall": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in RNE register": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "00f84ff4-6a13-4e42-b2c4-0afa5ae0ea08",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "IKYGVftx5nEqjtXJ",
+  "tags": []
+}

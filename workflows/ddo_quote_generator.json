@@ -1,0 +1,1048 @@
+{
+  "name": "ddo_quote_generator",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -976,
+        304
+      ],
+      "id": "f43cd616-6431-47d4-a5bd-6eaef88e6eb5",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.html }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        -352
+      ],
+      "id": "3aefa249-7dcf-4298-a46e-2f543f291c29",
+      "name": "HTML Output Viewer",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nconst vendor_name = data.vendor_name;\nconst vendor_address = data.vendor_address;\nconst vendor_phone = data.vendor_phone;\nconst vendor_email = data.vendor_email;\nconst vendor_website = data.vendor_website;\nconst vendor_siret = data.vendor_siret;\nconst client_name = data.client_name;\nconst client_address = data.client_address;\nconst quote_number = data.quote_number;\nconst quote_date = data.quote_date;\nconst quote_validity_days = data.quote_validity_days;\n\nconst [day, month, year] = quote_date.split('/').map(Number);\nconst baseDate = new Date(year, month - 1, day);\nconst quote_validity_date = new Date(baseDate.getTime() + quote_validity_days * 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR');\n\nconst quote_subject = data.quote_subject;\nconst quote_items = data.quote_items;\nconst item_description = data.item_description;\nconst item_quantity = data.item_quantity;\nconst item_unit_price = data.item_unit_price;\nconst item_total_price = data.item_total_price;\nlet quote_net_total = data.quote_net_total;\nlet quote_vat_total = data.quote_vat_total;\nlet quote_gross_total = data.quote_gross_total\n\nlet html_rows = '';\n\nconst vat_rate = 0;\n\n// Build table rows dynamically\nfor (const item of data.quote_items) {\n  const desc = item.item_description || '';\n  const qty = Number(item.item_quantity || 0);\n  const unitPrice = Number(item.item_unit_price || 0);\n  const totalHT = qty * unitPrice;\n  const vatValue = totalHT * vat_rate / 100;\n\n  quote_net_total += totalHT;\n  quote_vat_total += vatValue;\n\n  html_rows += `\n    <tr>\n      <td>${desc}</td>\n      <td class=\"qty\">${qty}</td>\n      <td class=\"price\">${unitPrice.toFixed(2)} €</td>\n      ${vat_rate !== 0 ? `\n        <td class=\"vatperc\">${vat_rate}%</td>\n        <td class=\"vattotal\">${vatValue.toFixed(2)} €</td>\n      ` : ''}\n      <td class=\"total\">${totalHT.toFixed(2)} €</td>\n    </tr>\n  `;\n}\n\nquote_gross_total = quote_net_total + quote_vat_total;\n\nconst html = `\n<!doctype html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n  <title>Devis - Mon Entreprise</title>\n<link href=\"https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap\" rel=\"stylesheet\">\n  <style>\n    /* Reset & base */\n    * { box-sizing: border-box; }\n    body {\n      font-family: 'Open Sans', Arial, sans-serif;\n      color: #2b2b2b;\n      margin: 0;\n      background: #fff;\n      padding: 40px;\n    }\n\n    .page {\n      width: 100%;\n      max-width: 900px;\n      margin: 0 auto;\n      border: 1px solid rgba(0,0,0,0.04);\n      padding: 34px;\n      position: relative;\n    }\n\n    /* Header */\n    .header {\n      display: flex;\n      justify-content: space-between;\n      align-items: flex-start;\n      gap: 20px;\n    }\n\n    .brand {\n      display: flex;\n      gap: 18px;\n      align-items: center;\n    }\n\n    .brand img {\n      width: 96px;\n      height: auto;\n      object-fit: contain;\n    }\n\n    .company-info {\n      line-height: 1.28;\n      font-size: 13px;\n    }\n\n    .company-info strong { font-size:15px; color:#0b4b7a; }\n\n    .quote-right {\n      text-align: right;\n      font-size: 13px;\n      min-width: 220px;\n    }\n\n    .quote-right .title {\n      color: #0b82d1;\n      font-weight: 700;\n      font-size: 22px;\n      letter-spacing: 0.6px;\n    }\n\n    .meta { margin-top: 8px; }\n    .meta div { margin-top: 6px; }\n\n    /* Client & subject */\n    .client-row {\n      display: flex;\n      justify-content: flex-start;\n      gap: 20px;\n      margin-top: 26px;\n      align-items: flex-start;\n    }\n\n    .client {\n      background: #f5f8fb;\n      padding: 12px 16px;\n      border-radius: 4px;\n      font-size: 13px;\n      width: 530px;\n    }\n\n    .subject {\n      margin-left: 6px;\n      align-self: center;\n      font-weight: 700;\n      color:#333;\n      font-size:14px;\n    }\n\n    /* Table */\n    table.quote-table {\n      width: 100%;\n      border-collapse: collapse;\n      margin-top: 20px;\n      font-size: 13px;\n    }\n\n    .quote-table thead th {\n      background: #1ea1e9;\n      color: white;\n      padding: 10px 12px;\n      text-align: left;\n      font-weight: 700;\n      font-size: 13px;\n    }\n\n    .quote-table tbody td {\n      padding: 10px 12px;\n      border-bottom: 1px solid rgba(0,0,0,0.06);\n    }\n\n    .quote-table tbody tr:nth-child(odd) { background: rgba(30,161,233,0.03); }\n\n    .qty, .price, .vatperc, .vattotal, .total {\n      text-align: right;\n      white-space: nowrap;\n    }\n\n    /* Totals */\n    .totals {\n      display: flex;\n      justify-content: flex-end;\n      margin-top: 12px;\n    }\n\n    .totals .box {\n      width: 260px;\n      background: #f7f9fb;\n      border-radius: 3px;\n      padding: 8px 0;\n      font-size: 13px;\n      box-shadow: 0 0 0 1px rgba(0,0,0,0.02) inset;\n    }\n\n    .totals .row {\n      display: flex;\n      justify-content: space-between;\n      padding: 8px 14px;\n      border-top: 1px solid rgba(0,0,0,0.04);\n    }\n\n    .totals .row.total-ttc {\n      background: #1ea1e9;\n      color: #fff;\n      font-weight: 700;\n      border-radius: 0 0 3px 3px;\n    }\n\n    /* Terms */\n    .terms {\n      margin-top: 44px;\n      font-size: 12px;\n      color: #556;\n      line-height: 1.45;\n    }\n\n    .terms h4 {\n      margin: 0 0 8px 0;\n      color: #2f6fa3;\n      font-size: 13px;\n      letter-spacing: 0.2px;\n    }\n\n    .legal {\n      margin-top: 20px;\n      font-size: 11px;\n      color: #98a2b3;\n      text-align: center;\n    }\n\n    .agreement {\n      margin-top: 15px;\n      font-size: 13px;\n      color: #333;\n      line-height: 1.6;\n    }\n\n    .agreement .signature-block {\n      margin-top: 20px;\n      border-top: 1px solid #ccc;\n      padding-top: 12px;\n    }\n\n    .agreement .signature-block div {\n      margin-top: 8px;\n    }\n\n    @media print {\n      body { padding: 0; }\n      .page { box-shadow: none; border: none; margin: 0; padding: 18mm; }\n    }\n  </style>\n</head>\n<body>\n  <div class=\"page\" role=\"document\" aria-label=\"Devis\">\n    <div class=\"header\">\n      <div class=\"brand\" aria-hidden=\"false\">\n        <!-- Replace src with your logo path if available -->\n        <img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAawAAADsCAIAAACnhQUjAAAACXBIWXMAAA7EAAAOxAGVKw4bAAADZGlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSfvu78nIGlkPSdXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQnPz4KPHg6eG1wbWV0YSB4bWxuczp4PSdhZG9iZTpuczptZXRhLyc+CjxyZGY6UkRGIHhtbG5zOnJkZj0naHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyc+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpBdHRyaWI9J2h0dHA6Ly9ucy5hdHRyaWJ1dGlvbi5jb20vYWRzLzEuMC8nPgogIDxBdHRyaWI6QWRzPgogICA8cmRmOlNlcT4KICAgIDxyZGY6bGkgcmRmOnBhcnNlVHlwZT0nUmVzb3VyY2UnPgogICAgIDxBdHRyaWI6Q3JlYXRlZD4yMDI1LTA3LTAxPC9BdHRyaWI6Q3JlYXRlZD4KICAgICA8QXR0cmliOkV4dElkPjVhNjhkMzliLWNiNTEtNGEzNS1hNzU4LWE4MGY0ZDgwZGE2NDwvQXR0cmliOkV4dElkPgogICAgIDxBdHRyaWI6RmJJZD41MjUyNjU5MTQxNzk1ODA8L0F0dHJpYjpGYklkPgogICAgIDxBdHRyaWI6VG91Y2hUeXBlPjI8L0F0dHJpYjpUb3VjaFR5cGU+CiAgICA8L3JkZjpsaT4KICAgPC9yZGY6U2VxPgogIDwvQXR0cmliOkFkcz4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6ZGM9J2h0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvJz4KICA8ZGM6dGl0bGU+CiAgIDxyZGY6QWx0PgogICAgPHJkZjpsaSB4bWw6bGFuZz0neC1kZWZhdWx0Jz5Zb3VyIHBhcmFncmFwaCB0ZXh0IC0gMTwvcmRmOmxpPgogICA8L3JkZjpBbHQ+CiAgPC9kYzp0aXRsZT4KIDwvcmRmOkRlc2NyaXB0aW9uPgo8L3JkZjpSREY+Cjwv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\" alt=\"${vendor_name} logo\" />\n        <div class=\"company-info\" aria-label=\"Informations de l'entreprise\">\n          <strong>${vendor_name}</strong><br />\n          <strong>Adresse :</strong> ${vendor_address}<br />\n          <strong>Téléphone :</strong> ${vendor_phone}<br />\n          <strong>E-mail :</strong> <a href=\"mailto:${vendor_email}\">${vendor_email}</a><br />\n          <strong>Site internet :</strong> <a href=\"${vendor_website}\" target=\"_blank\" rel=\"noopener\">${vendor_website}</a>\n        </div>\n      </div>\n\n      <div class=\"quote-right\" aria-label=\"Informations du devis\">\n        <div class=\"title\">DEVIS</div>\n        <div class=\"meta\">\n          <div><strong>N°</strong> ${quote_number}</div>\n          <div><strong>Date :</strong> ${quote_date}</div>\n          <div><strong>Valable jusqu'au :</strong> ${quote_validity_date}</div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"client-row\">\n      <div class=\"client\" aria-label=\"Client\">\n        <strong>Client : </strong>${client_name}<br />\n        <strong>Adresse : </strong>${client_address}\n      </div>\n\n      <div class=\"subject\" aria-label=\"Sujet\">\n        SUJET : ${quote_subject}\n      </div>\n    </div>\n\n    <table class=\"quote-table\" aria-label=\"Tableau du devis\">\n      <thead>\n        <tr>\n          <th style=\"width:48%;\">DESCRIPTION</th>\n          <th style=\"width:8%;\">QTÉ</th>\n          <th style=\"width:14%;\">PRIX U. HT</th>\n          ${vat_rate !== 0 ? `\n          <th style=\"width:10%;\">TVA %</th>\n          <th style=\"width:10%;\">TVA €</th>\n          ` : ''}\n          <th style=\"width:10%;\">TOTAL HT</th>\n        </tr>\n      </thead>\n      <tbody>\n        ${html_rows}\n        <!--\n        <tr>\n          <td>Ligne 1</td>\n          <td class=\"qty\">1</td>\n          <td class=\"price\">400,00 €</td>\n          <td class=\"vatperc\">20%</td>\n          <td class=\"vattotal\">80,00 €</td>\n          <td class=\"total\">400,00 €</td>\n        </tr>\n        <tr>\n          <td>Ligne 2</td>\n          <td class=\"qty\">1</td>\n          <td class=\"price\">500,00 €</td>\n          <td class=\"vatperc\">20%</td>\n          <td class=\"vattotal\">100,00 €</td>\n          <td class=\"total\">500,00 €</td>\n        </tr>\n        <tr>\n          <td>Ligne 3</td>\n          <td class=\"qty\">1</td>\n          <td class=\"price\">600,00 €</td>\n          <td class=\"vatperc\">20%</td>\n          <td class=\"vattotal\">120,00 €</td>\n          <td class=\"total\">600,00 €</td>\n        </tr>\n        -->\n      </tbody>\n    </table>\n\n    <div class=\"totals\" aria-hidden=\"false\">\n      <div class=\"box\" role=\"group\" aria-label=\"Total du devis\">\n        <div class=\"row\">\n          <div>TOTAL HT</div>\n          <div>${quote_net_total} €</div>\n        </div>\n        <div class=\"row\">\n          <div>TOTAL TVA</div>\n          <div>${quote_vat_total} €</div>\n        </div>\n        <div class=\"row total-ttc\" style=\"border-top:2px solid rgba(0,0,0,0.04);\">\n          <div>TOTAL TTC</div>\n          <div>${quote_gross_total} €</div>\n        </div>\n      </div>\n    </div>\n\n\n    <!-- Modalités -->\n    <div class=\"terms\">\n      <h4>Modalités</h4>\n      <p><strong>Délais de livraison :</strong><br>\n      Sous-titrage et transcription : 1 semaine après réception du contenu vidéo/audio<br>\n      Jeux interactifs : 3 semaines après validation</p>\n\n      <p><strong>Paiement :</strong><br>\n      50% à la commande<br>\n      50% à la livraison</p>\n    </div>\n\n    <!-- Bon pour accord -->\n    <div class=\"agreement\">\n      <div class=\"signature-block\">\n        <div><strong>Bon pour accord :</strong></div>\n        <div>Date : _______________</div>\n        <div>Signature et cachet de l'établissement :</div>\n      </div>\n    </div>\n\n    <div class=\"legal\" aria-hidden=\"true\">\n      ${vendor_name} - N° SIRET : ${vendor_siret}<br/>\n    </div>\n  </div>\n</body>\n</html>\n\n`\n\nreturn [{html}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        -256
+      ],
+      "id": "34276ba9-a417-43f2-8539-10aa4edac6a6",
+      "name": "HTML Generator"
+    },
+    {
+      "parameters": {
+        "jsCode": "// const html = `\n// <!doctype html>\n// <html lang=\"fr\">\n// <head>\n//   <meta charset=\"utf-8\" />\n//   <title>Large PDF Test</title>\n//   <style>\n//     body { font-family: Arial; padding: 20px; }\n//     table { border-collapse: collapse; width: 100%; }\n//     th, td { border: 1px solid #333; padding: 8px; }\n//     th { background-color: #0b82d1; color: white; }\n//   </style>\n// </head>\n// <body>\n//   <h1>Hello PDF!</h1>\n//   <p>Here is a big HTML content for testing...</p>\n// </body>\n// </html>\n// `;\n\nconst html = $input.first().json.html.replace(/\\r?\\n/g, '').replace(/\\\\\"/g, '\"')\n\nreturn [\n  {\n    json: {},\n    binary: {\n      htmlFile: {\n        data: Buffer.from(html, 'utf8').toString('base64'),\n        mimeType: 'text/html',\n        fileName: 'template.html'\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -160
+      ],
+      "id": "6ca33370-7587-42a2-8c91-e01addf0d4c6",
+      "name": "HTML file",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/tmp/{{ $('GLOBAL VARIABLES').item.json.generated_html_filename }}",
+        "dataPropertyName": "htmlFile",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        384,
+        -160
+      ],
+      "id": "c812506f-1e75-4835-8364-1afdee03bf1f",
+      "name": "Save HTML File to Disk"
+    },
+    {
+      "parameters": {
+        "command": "=node /usr/local/bin/scripts/html-to-pdf-v3.js /tmp/{{ $('GLOBAL VARIABLES').item.json.generated_html_filename }} /tmp/{{ $('GLOBAL VARIABLES').item.json.generated_pdf_filename }}"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -160
+      ],
+      "id": "3c3abd87-72bc-4afa-8693-f9cd81dae92a",
+      "name": "Convert HTML to PDF"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/tmp/{{ $('GLOBAL VARIABLES').item.json.generated_pdf_filename }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        832,
+        -160
+      ],
+      "id": "40cffb74-f5ce-4e7e-8b90-a030cb9c0538",
+      "name": "Load Output PDF from Disk"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"vendor_name\": \"Annifey\",\n  \"vendor_address\": \"97231 Le Robert\",\n  \"vendor_phone\": \"0696 008 855\",\n  \"vendor_email\": \"david.loutoby@outlook.com\",\n  \"vendor_website\": \"annifey.com\",\n  \"vendor_siret\": \"931 434 237 00018\",\n\n  \"client_name\": \"Mme Sophie Rengassamy\",\n  \"client_address\": \"Collège Robert 3, Quartier Pontaléry 97231 Le Robert\",\n\n  \"quote_number\": \"2025110001\",\n  \"quote_date\": \"12/11/2025\",\n  \"quote_validity_days\": \"15\",\n  \"quote_subject\": \"Prestations techniques et pédagogiques pour le projet d'interviews \\\"Palé nou di lanmè\\\" - valorisation du patrimoine maritime et linguistique martiniquais.\",\n  \"quote_items\": [\n    {\n      \"item_description\": \"<b>Transcription et montage sous-titres</b><br />Sous-titres créole + français pour vidéo 3min<br />Recherche terminologique maritime<br />Création fichier SRT<br />Intégration fichier SRT dans vidéo\",\n      \"item_quantity\": 1,\n      \"item_unit_price\": 80,\n      \"item_total_price\": 80\n    },\n    {\n      \"item_description\": \"<b>Activité numérique Quiz intéractif</b><br />Développement et création du contenu<br />Mise en ligne avec accès sécurisé<br />Présentation de l'activité\",\n      \"item_quantity\": 1,\n      \"item_unit_price\": 120,\n      \"item_total_price\": 120\n    }\n  ],\n  \"quote_net_total\": 0,\n  \"quote_vat_total\": 0,\n  \"quote_gross_total\": 0\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -288,
+        -256
+      ],
+      "id": "cfd7e82e-5685-4f52-9a7b-98c305a23b07",
+      "name": "Quote Content"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"generated_html_filename\": \"ddo-n8n-generated-html.html\",\n  \"generated_pdf_filename\": \"ddo-n8n-generated-pdf.pdf\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        -256
+      ],
+      "id": "dadcb10e-fc54-4221-9053-fd0d4a6b5c8d",
+      "name": "GLOBAL VARIABLES"
+    },
+    {
+      "parameters": {
+        "content": "## PDF Quote Generator\n",
+        "height": 416,
+        "width": 1936
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -832,
+        -416
+      ],
+      "typeVersion": 1,
+      "id": "f39ad95e-088b-4f87-82ca-5b1994d910de",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## HTML to PDF with Puppeteer\n\n### Get into container as root\n```\ndocker exec -it --user root n8n /bin/sh\n````\n\n### Create folder for JS script file\n\n```\nmkdir -p /usr/local/bin/scripts\n```\n\n### html-to-pdf.js\n```javascript\nconst puppeteer = require('puppeteer-core');\nconst fs = require('fs');\nconst path = require('path');\n\n(async () => {\n  try {\n    const args = process.argv.slice(2);\n    if (args.length < 2) {\n      console.error('Usage: node script.js <input.html> <output.pdf>');\n      process.exit(1);\n    }\n\n    const inputHtmlPath = path.resolve(args[0]);\n    const outputPdfPath = path.resolve(args[1]);\n\n    if (!fs.existsSync(inputHtmlPath)) {\n      console.error(`Input file does not exist: ${inputHtmlPath}`);\n      process.exit(1);\n    }\n\n    console.log('Reading HTML from:', inputHtmlPath);\n    const html = fs.readFileSync(inputHtmlPath, 'utf8');\n\n    const browser = await puppeteer.launch({\n      executablePath: '/usr/bin/chromium-browser', // verify path\n      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']\n    });\n\n    const page = await browser.newPage();\n    await page.setContent(html, { waitUntil: 'networkidle0' });\n\n    console.log('Generating PDF to:', outputPdfPath);\n    await page.pdf({\n      path: outputPdfPath,\n      format: 'A4',\n      printBackground: true\n    });\n\n    await browser.close();\n\n    if (fs.existsSync(outputPdfPath)) {\n      console.log(`PDF generated successfully: ${outputPdfPath}`);\n    } else {\n      console.error('PDF was not created. Check Chromium path and permissions.');\n    }\n\n  } catch (error) {\n    console.error('Error:', error.message);\n    process.exit(1);\n  }\n})();\n\n```\n\n### Make it executable\n```\nchmod +x /usr/local/bin/scripts/html-to-pdf.js\n```\n\n\n### Install Puppeteer in the same folder\n```\ncd /usr/local/bin/scripts\nnpm init -y\nnpm install puppeteer-core\n```\nOR better ???\n```\n/usr/local/bin/scripts # apk update\n/usr/local/bin/scripts # apk add --no-cache chromium nss freetype freetype-dev harfbuzz ca-certificates ttf-freefont\n```\nAND check that `Chromium` is installed\n```\n/usr/local/bin/scripts # which chromium\n/usr/local/bin/scripts # which chromium-browser\n```",
+        "height": 2160,
+        "width": 976,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2416,
+        352
+      ],
+      "typeVersion": 1,
+      "id": "d4721200-dd57-48a4-8cef-91ff7a60d4b7",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.html }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        992
+      ],
+      "id": "ba903e43-17cd-4376-b948-87df686297b3",
+      "name": "HTML Output Viewer1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nconst landlord_name = data.landlord_name;\nconst landlord_signature_name = landlord_name.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');\nconst landlord_address = data.landlord_address;\nconst tenant_name = data.tenant_name;\nconst tenant_address = data.tenant_address;\nconst property_address = data.property_address;\nconst period = data.period; // ex: \"Janvier 2025\"\nconst rent_amount = Number(data.rent_amount || 0);\nconst charges_amount = Number(data.charges_amount || 0);\nconst total_paid = rent_amount + charges_amount;\nconst city = data.city || '';\nconst payment_date = data.payment_date; // ex: \"02/02/2025\"\nconst today_document_date = data.today_document_date;\n\nconst html = `\n<!doctype html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n  <title>Quittance de Loyer</title>\n  <link href=\"https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap\" rel=\"stylesheet\">\n  <style>\n    body {\n      font-family: 'Open Sans', Arial, sans-serif;\n      color: #2b2b2b;\n      margin: 0;\n      padding: 40px;\n    }\n\n    .page {\n      width: 100%;\n      max-width: 700px;\n      margin: 0 auto;\n      border: 1px solid rgba(0,0,0,0.08);\n      padding: 30px;\n    }\n\n    h1 {\n      text-align: center;\n      color: #0b4b7a;\n    }\n\n    .section {\n      margin-top: 20px;\n      font-size: 14px;\n      line-height: 1.6;\n    }\n\n    table {\n      width: 100%;\n      border-collapse: collapse;\n      margin-top: 10px;\n      font-size: 14px;\n      border: 1px solid #000; /* table border */\n    }\n\n    th, td {\n      padding: 6px 8px;\n      border: 1px solid #000; /* cell borders */\n      text-align: left;\n    }\n\n    th {\n      font-weight: bold;\n      background-color: #f5f5f5;\n    }\n\n    td.label {\n      font-weight: bold;\n    }\n\n    td.total {\n      font-weight: bold;\n    }\n\n    .footer {\n      margin-top: 30px;\n      font-size: 13px;\n    }\n\n    .signature {\n      margin-top: 50px;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"page\">\n    <h1>QUITTANCE DE LOYER</h1>\n\n    <div class=\"section\">\n      <strong>Bailleur :</strong><br/>\n      ${landlord_name}<br/>\n      ${landlord_address}\n    </div>\n\n    <div class=\"section\">\n      <strong>Locataire :</strong><br/>\n      ${tenant_name}<br/>\n      <strong>Adresse du logement :</strong><br/>\n      ${property_address}\n    </div>\n\n    <div class=\"section\">\n      <strong>Période concernée :</strong><br/>\n      ${period}\n    </div>\n\n    <div class=\"section\">\n      <strong>Détail du paiement :</strong>\n      <table>\n        <tr>\n          <th>Description</th>\n          <th>Montant (€)</th>\n        </tr>\n        <tr>\n          <td class=\"label\">Loyer mensuel hors charges</td>\n          <td>${rent_amount.toFixed(2)} €</td>\n        </tr>\n        ${charges_amount > 0 ? `\n        <tr>\n          <td class=\"label\">Provisions sur charges</td>\n          <td>${charges_amount.toFixed(2)} €</td>\n        </tr>` : ''}\n        <tr>\n          <td class=\"total\">Total payé</td>\n          <td class=\"total\">${total_paid.toFixed(2)} €</td>\n        </tr>\n      </table>\n    </div>\n\n    <div class=\"section\">\n      Le bailleur certifie avoir reçu du locataire la somme de\n      <strong>${total_paid.toFixed(2)} €</strong>\n      au titre du paiement du loyer${charges_amount > 0 ? ' et des charges' : ''},<br />\n      le <strong>${payment_date}</strong>\n      pour la période indiquée ci-dessus.\n    </div>\n\n    <div class=\"footer\">\n      Fait à ${city}, le ${today_document_date}\n    </div>\n\n    <div class=\"signature\">\n      Signature du bailleur :<br/><br/>\n      <div style=\"font-family: 'Great Vibes', cursive; font-size: 28px; ; text-transform: capitalize;\">\n        ${landlord_signature_name}\n      </div>\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{ html }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        1088
+      ],
+      "id": "8afcf57f-28ed-4da4-97a0-5eac025a3ab4",
+      "name": "HTML Generator1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// const html = `\n// <!doctype html>\n// <html lang=\"fr\">\n// <head>\n//   <meta charset=\"utf-8\" />\n//   <title>Large PDF Test</title>\n//   <style>\n//     body { font-family: Arial; padding: 20px; }\n//     table { border-collapse: collapse; width: 100%; }\n//     th, td { border: 1px solid #333; padding: 8px; }\n//     th { background-color: #0b82d1; color: white; }\n//   </style>\n// </head>\n// <body>\n//   <h1>Hello PDF!</h1>\n//   <p>Here is a big HTML content for testing...</p>\n// </body>\n// </html>\n// `;\n\nconst html = $input.first().json.html.replace(/\\r?\\n/g, '').replace(/\\\\\"/g, '\"')\n\nreturn [\n  {\n    json: {},\n    binary: {\n      htmlFile: {\n        data: Buffer.from(html, 'utf8').toString('base64'),\n        mimeType: 'text/html',\n        fileName: 'template.html'\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        1184
+      ],
+      "id": "c176692c-4040-42c8-8778-d14135390f96",
+      "name": "HTML file1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/tmp/{{ $('GLOBAL VARIABLES1').item.json.generated_html_filename }}",
+        "dataPropertyName": "htmlFile",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        432,
+        1184
+      ],
+      "id": "edc5e315-ef99-4850-9fc0-24785f96379b",
+      "name": "Save HTML File to Disk1"
+    },
+    {
+      "parameters": {
+        "command": "=node /usr/local/bin/scripts/html-to-pdf-v3.js /tmp/{{ $('GLOBAL VARIABLES1').item.json.generated_html_filename }} /tmp/{{ $('GLOBAL VARIABLES1').item.json.generated_pdf_filename }}"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        656,
+        1184
+      ],
+      "id": "e487678f-7e30-4b80-8893-046bbb122865",
+      "name": "Convert HTML to PDF1"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/tmp/{{ $('GLOBAL VARIABLES1').item.json.generated_pdf_filename }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        880,
+        1184
+      ],
+      "id": "bda1dff3-2874-4831-b5c8-6e528cce54e7",
+      "name": "Load Output PDF from Disk1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"generated_html_filename\": \"ddo-n8n-generated-html.html\",\n  \"generated_pdf_filename\": \"ddo-n8n-generated-pdf.pdf\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -464,
+        1088
+      ],
+      "id": "f522de4c-0a4a-4af7-a45a-6634386bd611",
+      "name": "GLOBAL VARIABLES1"
+    },
+    {
+      "parameters": {
+        "content": "## PDF Rent Receipt Generator\n",
+        "height": 416,
+        "width": 1936
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -784,
+        928
+      ],
+      "typeVersion": 1,
+      "id": "0ffb1147-68b5-4c35-8be8-21673234ea8f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"landlord_name\": \"David LOUTOBY\",\n  \"landlord_address\": \"Quartier Duchesne, 97231 LE ROBERT\",\n  \"tenant_name\": \"Jean-Marc CINNA & Sabine COUVELARD\",\n  \"tenant_address\": \"\",\n  \"property_address\": \"Morne Courbaril, 97240 LE FRANCOIS\", \n  \"rent_amount\": 677.42,\n  \"charges_amount\": 0,\n  \"total_paid\": 677.42,\n  \"city\": \"LE ROBERT\",\n  \"period\": \"18-31 Août 2025\",\n  \"payment_date\": \"18 Août 2025\",\n  \"today_document_date\": \"3 Janvier 2026\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -240,
+        1088
+      ],
+      "id": "be0cb450-b2cf-44c0-9f44-6fc94bf4be04",
+      "name": "VARIABLES_QUITTANCE"
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.html }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        1648
+      ],
+      "id": "e868403a-0f43-4b5e-9167-82c9001cfd0c",
+      "name": "HTML Output Viewer2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nconst landlord_name = $('QUITTANCE_CONSTANTS').first().json.landlord_name;\nconst landlord_signature_name = landlord_name.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');\nconst landlord_address = $('QUITTANCE_CONSTANTS').first().json.landlord_address;\nconst tenant_name = $('QUITTANCE_CONSTANTS').first().json.tenant_name;\nconst tenant_address = $('QUITTANCE_CONSTANTS').first().json.tenant_address;\nconst property_address = $('QUITTANCE_CONSTANTS').first().json.property_address;\nconst period = data.period; // ex: \"Janvier 2025\"\nconst rent_amount = Number(data.rent_amount || 0);\nconst charges_amount = Number(data.charges_amount || 0);\nconst total_paid = rent_amount + charges_amount;\nconst city = data.city || '';\nconst payment_date = data.payment_date; // ex: \"02/02/2025\"\nconst today_document_date = data.today_document_date;\n\nconst html = `\n<!doctype html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n  <title>Quittance de Loyer</title>\n  <link href=\"https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap\" rel=\"stylesheet\">\n  <style>\n    body {\n      font-family: 'Open Sans', Arial, sans-serif;\n      color: #2b2b2b;\n      margin: 0;\n      padding: 40px;\n    }\n\n    .page {\n      width: 100%;\n      max-width: 700px;\n      margin: 0 auto;\n      border: 1px solid rgba(0,0,0,0.08);\n      padding: 30px;\n    }\n\n    h1 {\n      text-align: center;\n      color: #0b4b7a;\n    }\n\n    .section {\n      margin-top: 20px;\n      font-size: 14px;\n      line-height: 1.6;\n    }\n\n    table {\n      width: 100%;\n      border-collapse: collapse;\n      margin-top: 10px;\n      font-size: 14px;\n      border: 1px solid #000; /* table border */\n    }\n\n    th, td {\n      padding: 6px 8px;\n      border: 1px solid #000; /* cell borders */\n      text-align: left;\n    }\n\n    th {\n      font-weight: bold;\n      background-color: #f5f5f5;\n    }\n\n    td.label {\n      font-weight: bold;\n    }\n\n    td.total {\n      font-weight: bold;\n    }\n\n    .footer {\n      margin-top: 30px;\n      font-size: 13px;\n    }\n\n    .signature {\n      margin-top: 50px;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"page\">\n    <h1>QUITTANCE DE LOYER</h1>\n\n    <div class=\"section\">\n      <strong>Bailleur :</strong><br/>\n      ${landlord_name}<br/>\n      ${landlord_address}\n    </div>\n\n    <div class=\"section\">\n      <strong>Locataire :</strong><br/>\n      ${tenant_name}<br/>\n      <strong>Adresse du logement :</strong><br/>\n      ${property_address}\n    </div>\n\n    <div class=\"section\">\n      <strong>Période concernée :</strong><br/>\n      ${period}\n    </div>\n\n    <div class=\"section\">\n      <strong>Détail du paiement :</strong>\n      <table>\n        <tr>\n          <th>Description</th>\n          <th>Montant (€)</th>\n        </tr>\n        <tr>\n          <td class=\"label\">Loyer mensuel hors charges</td>\n          <td>${rent_amount.toFixed(2)} €</td>\n        </tr>\n        ${charges_amount > 0 ? `\n        <tr>\n          <td class=\"label\">Provisions sur charges</td>\n          <td>${charges_amount.toFixed(2)} €</td>\n        </tr>` : ''}\n        <tr>\n          <td class=\"total\">Total payé</td>\n          <td class=\"total\">${total_paid.toFixed(2)} €</td>\n        </tr>\n      </table>\n    </div>\n\n    <div class=\"section\">\n      Le bailleur certifie avoir reçu du locataire la somme de\n      <strong>${total_paid.toFixed(2)} €</strong>\n      au titre du paiement du loyer${charges_amount > 0 ? ' et des charges' : ''},<br />\n      le <strong>${payment_date}</strong>\n      pour la période indiquée ci-dessus.\n    </div>\n\n    <div class=\"footer\">\n      Fait à ${city}, le ${today_document_date}\n    </div>\n\n    <div class=\"signature\">\n      Signature du bailleur :<br/><br/>\n      <div style=\"font-family: 'Great Vibes', cursive; font-size: 28px; ; text-transform: capitalize;\">\n        ${landlord_signature_name}\n      </div>\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{ html }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        1712
+      ],
+      "id": "40458157-d2b5-4383-b510-39be9b8869da",
+      "name": "HTML Generator2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// const html = `\n// <!doctype html>\n// <html lang=\"fr\">\n// <head>\n//   <meta charset=\"utf-8\" />\n//   <title>Large PDF Test</title>\n//   <style>\n//     body { font-family: Arial; padding: 20px; }\n//     table { border-collapse: collapse; width: 100%; }\n//     th, td { border: 1px solid #333; padding: 8px; }\n//     th { background-color: #0b82d1; color: white; }\n//   </style>\n// </head>\n// <body>\n//   <h1>Hello PDF!</h1>\n//   <p>Here is a big HTML content for testing...</p>\n// </body>\n// </html>\n// `;\n\nconst html = $input.first().json.html.replace(/\\r?\\n/g, '').replace(/\\\\\"/g, '\"')\n\nreturn [\n  {\n    json: {},\n    binary: {\n      htmlFile: {\n        data: Buffer.from(html, 'utf8').toString('base64'),\n        mimeType: 'text/html',\n        fileName: 'template.html'\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        1808
+      ],
+      "id": "0f49423b-69b3-4bb7-b1a9-04e5d1f66659",
+      "name": "HTML file2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/tmp/{{ $('WORKFLOW_VARIABLES').item.json.generated_html_filename }}",
+        "dataPropertyName": "htmlFile",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        864,
+        1808
+      ],
+      "id": "0a8ccefc-dfb5-460d-901d-7d2e82f1c70a",
+      "name": "Save HTML File to Disk2"
+    },
+    {
+      "parameters": {
+        "command": "=node /usr/local/bin/scripts/html-to-pdf-v3.js /tmp/{{ $('WORKFLOW_VARIABLES').item.json.generated_html_filename }} /tmp/{{ $('WORKFLOW_VARIABLES').item.json.generated_pdf_filename }}"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        1808
+      ],
+      "id": "847473b2-ab51-4ecd-9696-e06c512b6d3a",
+      "name": "Convert HTML to PDF2"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/tmp/{{ $('WORKFLOW_VARIABLES').item.json.generated_pdf_filename }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        1808
+      ],
+      "id": "c63aa671-96e2-4e8e-9889-d1299cb53e0b",
+      "name": "Load Output PDF from Disk2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"generated_html_filename\": \"ddo-n8n-generated-html.html\",\n  \"generated_pdf_filename\": \"ddo-n8n-generated-pdf.pdf\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -736,
+        1696
+      ],
+      "id": "39922670-21d9-4033-a9a7-752af9ad3b8f",
+      "name": "WORKFLOW_VARIABLES"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"landlord_name\": \"John Doe\",\n  \"landlord_address\": \"Paris\",\n  \"tenant_name\": \"M. & Mme\",\n  \"tenant_address\": \"\",\n  \"property_address\": \"Rue Lieu Du Logement\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -528,
+        1696
+      ],
+      "id": "8bb7f591-b26e-4add-85f2-37390ce930ba",
+      "name": "QUITTANCE_CONSTANTS"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"quittances\": [\n    {\n      \"period\": \"18-31 Août 2025\",\n      \"payment_date\": \"18 Août 2025\",\n      \"city\": \"Paris\",\n      \"today_document_date\": \"3 Janvier 2026\", \n      \"rent_amount\": 300,\n      \"charges_amount\": 0,\n      \"total_paid\": 300\n    },\n    {\n      \"period\": \"Septembre 2025\",\n      \"payment_date\": \"2 Septembre 2025\",\n      \"city\": \"Paris\",\n      \"today_document_date\": \"3 Janvier 2026\", \n      \"rent_amount\": 500,\n      \"charges_amount\": 0,\n      \"total_paid\": 500\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -304,
+        1696
+      ],
+      "id": "2ed68bb4-916c-4862-91f6-6d34b567144b",
+      "name": "QUITTANCE_VARIABLES"
+    },
+    {
+      "parameters": {
+        "batchSize": "={{ 1 }}",
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        128,
+        1696
+      ],
+      "id": "70b1f054-cc15-4243-ae4f-34f7884cbee8",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "content": "## PDF Rent Receipt Generator\n",
+        "height": 560,
+        "width": 2400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -800,
+        1552
+      ],
+      "typeVersion": 1,
+      "id": "134e5d8b-4afb-4671-b9c8-60e70f9468e5",
+      "name": "Split quittance"
+    },
+    {
+      "parameters": {
+        "jsCode": "// // Loop over input items and add a new field called 'myNewField' to the JSON of each one\n// for (const item of $input.all()) {\n//   item.json.myNewField = 1;\n// }\n\n// return $input.all\n\n// Get the quittances array from the previous node\nconst quittances = $json[\"quittances\"];\n\n// Return each item as its own output item\nreturn quittances.map(q => ({ json: q }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        1696
+      ],
+      "id": "06f95280-09b5-4da8-ad6e-9f0d476c2e70",
+      "name": "Split quittance1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nconst landlord_name = data.landlord_name;\nconst landlord_signature_name = landlord_name.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');\nconst landlord_address = data.landlord_address;\nconst tenant_name = data.tenant_name;\nconst tenant_address = data.tenant_address;\nconst property_address = data.property_address;\nconst period = data.period; // ex: \"Janvier 2025\"\nconst rent_amount = Number(data.rent_amount || 0);\nconst charges_amount = Number(data.charges_amount || 0);\nconst total_paid = rent_amount + charges_amount;\nconst city = data.city || '';\nconst payment_date = data.payment_date; // ex: \"02/02/2025\"\nconst today_document_date = data.today_document_date;\n\nconst html = `\n<!doctype html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n  <title>Quittance de Loyer</title>\n  <link href=\"https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap\" rel=\"stylesheet\">\n  <style>\n    body {\n      font-family: 'Open Sans', Arial, sans-serif;\n      color: #2b2b2b;\n      margin: 0;\n      padding: 40px;\n    }\n\n    .page {\n      width: 100%;\n      max-width: 700px;\n      margin: 0 auto;\n      border: 1px solid rgba(0,0,0,0.08);\n      padding: 30px;\n    }\n\n    h1 {\n      text-align: center;\n      color: #0b4b7a;\n    }\n\n    .section {\n      margin-top: 20px;\n      font-size: 14px;\n      line-height: 1.6;\n    }\n\n    table {\n      width: 100%;\n      border-collapse: collapse;\n      margin-top: 10px;\n      font-size: 14px;\n      border: 1px solid #000; /* table border */\n    }\n\n    th, td {\n      padding: 6px 8px;\n      border: 1px solid #000; /* cell borders */\n      text-align: left;\n    }\n\n    th {\n      font-weight: bold;\n      background-color: #f5f5f5;\n    }\n\n    td.label {\n      font-weight: bold;\n    }\n\n    td.total {\n      font-weight: bold;\n    }\n\n    .footer {\n      margin-top: 30px;\n      font-size: 13px;\n    }\n\n    .signature {\n      margin-top: 50px;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"page\">\n    <h1>QUITTANCE DE LOYER</h1>\n\n    <div class=\"section\">\n      <strong>Bailleur :</strong><br/>\n      ${landlord_name}<br/>\n      ${landlord_address}\n    </div>\n\n    <div class=\"section\">\n      <strong>Locataire :</strong><br/>\n      ${tenant_name}<br/>\n      <strong>Adresse du logement :</strong><br/>\n      ${property_address}\n    </div>\n\n    <div class=\"section\">\n      <strong>Période concernée :</strong><br/>\n      ${period}\n    </div>\n\n    <div class=\"section\">\n      <strong>Détail du paiement :</strong>\n      <table>\n        <tr>\n          <th>Description</th>\n          <th>Montant (€)</th>\n        </tr>\n        <tr>\n          <td class=\"label\">Loyer mensuel hors charges</td>\n          <td>${rent_amount.toFixed(2)} €</td>\n        </tr>\n        ${charges_amount > 0 ? `\n        <tr>\n          <td class=\"label\">Provisions sur charges</td>\n          <td>${charges_amount.toFixed(2)} €</td>\n        </tr>` : ''}\n        <tr>\n          <td class=\"total\">Total payé</td>\n          <td class=\"total\">${total_paid.toFixed(2)} €</td>\n        </tr>\n      </table>\n    </div>\n\n    <div class=\"section\">\n      Le bailleur certifie avoir reçu du locataire la somme de\n      <strong>${total_paid.toFixed(2)} €</strong>\n      au titre du paiement du loyer${charges_amount > 0 ? ' et des charges' : ''},<br />\n      le <strong>${payment_date}</strong>\n      pour la période indiquée ci-dessus.\n    </div>\n\n    <div class=\"footer\">\n      Fait à ${city}, le ${today_document_date}\n    </div>\n\n    <div class=\"signature\">\n      Signature du bailleur :<br/><br/>\n      <div style=\"font-family: 'Great Vibes', cursive; font-size: 28px; ; text-transform: capitalize;\">\n        ${landlord_signature_name}\n      </div>\n    </div>\n  </div>\n</body>\n</html>\n`;\n\n// return [{ html }];\n\n// const html = $input.first().json.html.replace(/\\r?\\n/g, '').replace(/\\\\\"/g, '\"')\n\nreturn [\n  {\n    json: { html },\n    binary: {\n      htmlFile: {\n        data: Buffer.from(html, 'utf8').toString('base64'),\n        mimeType: 'text/html',\n        fileName: 'template.html'\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        384
+      ],
+      "id": "b4eb8fe1-2b9d-4700-bb78-0cb1eb0c0dce",
+      "name": "HTML Generator3"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/tmp/ddo-n8n-generated-html.html",
+        "dataPropertyName": "htmlFile",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        352,
+        240
+      ],
+      "id": "7adbae6f-6635-4879-9fb8-5043c1538e57",
+      "name": "Save HTML File to Disk3"
+    },
+    {
+      "parameters": {
+        "command": "=node /usr/local/bin/scripts/html-to-pdf-v3.js /tmp/ddo-n8n-generated-html.html \"/tmp/{{ $('VARIABLES_QUITTANCE1').item.json.landlord_name }} - {{ $('VARIABLES_QUITTANCE1').item.json.period }} - {{ $('VARIABLES_QUITTANCE1').item.json.today_document_date }}.pdf\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        576,
+        240
+      ],
+      "id": "ba337820-8264-4644-9afc-cd950062c356",
+      "name": "Convert HTML to PDF3"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/tmp/{{ $('VARIABLES_QUITTANCE1').item.json.landlord_name }} - {{ $('VARIABLES_QUITTANCE1').item.json.period }} - {{ $('VARIABLES_QUITTANCE1').item.json.today_document_date }}.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        800,
+        240
+      ],
+      "id": "3e2c0154-235d-400b-9e2e-d3eb6ddd2b29",
+      "name": "Load Output PDF from Disk3"
+    },
+    {
+      "parameters": {
+        "content": "## DEMO N8N LIVE\n",
+        "height": 560,
+        "width": 1920
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1040,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "2f7b4dd0-cd04-4ba4-8139-6899c7e1bcac",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"landlord_name\": \"M. Proprio\",\n  \"landlord_address\": \"Paris\",\n  \"tenant_name\": \"M. et Mme Loca\",\n  \"tenant_address\": \"\",\n  \"property_address\": \"Paris\", \n  \"rent_amount\": 677.42,\n  \"charges_amount\": 0,\n  \"total_paid\": 677.42,\n  \"city\": \"Paris\",\n  \"period\": \"18-31 Août 2025\",\n  \"payment_date\": \"18 Août 2025\",\n  \"today_document_date\": \"3 Janvier 2026\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -656,
+        384
+      ],
+      "id": "7216e936-cff7-4235-a374-d4d5b738f367",
+      "name": "VARIABLES_QUITTANCE1"
+    },
+    {
+      "parameters": {
+        "content": "## TODO for 15 January n8n live + SEND CAHIER DES CHARGES JSONs to Farid\n- monthly trigger\n- use data tables + remove all Set nodes\n- use Loop Over node\n- remove html output viewer\n- remove one html generator nodes?\n- push files somewhere?",
+        "height": 240,
+        "width": 576,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "6ab676d8-cc9d-45b2-bf7d-deb3f7e9c118",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtDayOfMonth": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -976,
+        480
+      ],
+      "id": "bd9d6f8e-0195-4db9-86cd-dd59fb55ace5",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://puppeteer-api:3000/pdf",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "html",
+              "value": "={{ $json.html }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        128,
+        528
+      ],
+      "id": "6101580e-0917-448d-8776-5b7eaeaff2e8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.html }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        624
+      ],
+      "id": "26365297-86bc-451a-ac4a-ddf300d38624",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "// const data = $json;\n\nconst data = {\n  \"company_name\": \"Annifey\",\n  \"company_address\": \"QUARTIER DUCHENE, 97231 LE ROBERT\",\n  \"company_siret\": \"93143423700018\",\n  \"client_name\": \"AMAF - Association Martiniquaise des Aidants Familiaux\",\n  \"client_address\": \"41 rue Eugène Maillard, 97212 SAINT JOSEPH\",\n  \"invoice_number\": \"2026-03-001\",\n  \"invoice_date\": \"02/03/2026\",\n  \"service_date\": \"07/01/2026\",\n  \"payment_date\": \"07/01/2026\",\n  \"city\": \"97231 LE ROBERT\",\n  \"description\": \"Atelier de Créole\",\n  \"amount\": 160\n}\n\n// --- PRESTATAIRE ---\nconst company_name = data.company_name;\nconst company_signature_name = 'David Loutoby';\nconst company_address = data.company_address;\nconst company_siret = data.company_siret;\n\n// --- CLIENT ---\nconst client_name = data.client_name;\nconst client_address = data.client_address;\n\n// --- FACTURE ---\nconst invoice_number = data.invoice_number;\nconst invoice_date = data.invoice_date;\nconst service_date = data.service_date;\nconst payment_date = data.payment_date;\nconst city = data.city || \"\";\nconst description = data.description || \"Prestation de services\";\nconst amount = Number(data.amount || 0);\n\nconst html = `\n<!doctype html>\n<html lang=\"fr\">\n<head>\n<meta charset=\"utf-8\" />\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n<title>Facture</title>\n\n<link href=\"https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap\" rel=\"stylesheet\">\n\n<style>\n  body {\n    font-family: 'Open Sans', Arial, sans-serif;\n    color: #2b2b2b;\n    margin: 0;\n    padding: 40px;\n  }\n\n  .page {\n    width: 100%;\n    max-width: 700px;\n    margin: 0 auto;\n    border: 1px solid rgba(0,0,0,0.08);\n    padding: 30px;\n  }\n\n  h1 {\n    text-align: center;\n    color: #0b4b7a;\n    margin-bottom: 5px;\n  }\n\n  .paid {\n    text-align: center;\n    color: #2e7d32;\n    font-weight: bold;\n    margin-bottom: 20px;\n  }\n\n  .section {\n    margin-top: 20px;\n    font-size: 14px;\n    line-height: 1.6;\n  }\n\n  table {\n    width: 100%;\n    border-collapse: collapse;\n    margin-top: 10px;\n    font-size: 14px;\n    border: 1px solid #000;\n  }\n\n  th, td {\n    padding: 6px 8px;\n    border: 1px solid #000;\n    text-align: left;\n  }\n\n  th {\n    font-weight: bold;\n    background-color: #f5f5f5;\n  }\n\n  td.total {\n    font-weight: bold;\n  }\n\n  .footer {\n    margin-top: 30px;\n    font-size: 13px;\n  }\n\n  .signature {\n    margin-top: 50px;\n  }\n</style>\n</head>\n\n<body>\n<div class=\"page\">\n\n<h1>FACTURE</h1>\n<div class=\"paid\">FACTURE ACQUITTÉE</div>\n\n<div class=\"section\">\n<strong>Numéro de facture :</strong> ${invoice_number}<br/>\n<strong>Date d'émission :</strong> ${invoice_date}\n</div>\n\n<div class=\"section\">\n<strong>Prestataire :</strong><br/>\n${company_signature_name}<br/>\nNom commercial : ${company_name}<br/>\nAdresse : ${company_address}<br/>\nSIRET : ${company_siret}<br/>\nEntrepreneur individuel – Micro-entreprise<br/>\nTVA non applicable, art. 293 B du CGI\n</div>\n\n<div class=\"section\">\n<strong>Client :</strong><br/>\n${client_name}<br/>\n${client_address}\n</div>\n\n<div class=\"section\">\n<strong>Détail de la prestation :</strong>\n<table>\n<tr>\n  <th>Description</th>\n  <th>Date</th>\n  <th>Montant (€)</th>\n</tr>\n<tr>\n  <td>${description}</td>\n  <td>${service_date}</td>\n  <td>${amount.toFixed(2)} €</td>\n</tr>\n<tr>\n  <td colspan=\"2\" class=\"total\">Total</td>\n  <td class=\"total\">${amount.toFixed(2)} €</td>\n</tr>\n</table>\n</div>\n\n<div class=\"section\">\nPrestation réalisée le <strong>${service_date}</strong>.<br/>\nRèglement : Espèces.<br/>\nPayée en espèces le <strong>${payment_date}</strong>.\n</div>\n\n<div class=\"footer\">\nFait à ${city}, le ${invoice_date}\n</div>\n\n<div class=\"signature\">\nSignature :<br/><br/>\n<div style=\"font-family: 'Great Vibes', cursive; font-size: 28px;\">\n  ${company_signature_name}\n</div>\n</div>\n\n</div>\n</body>\n</html>\n`;\n\nreturn [{ html }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        560
+      ],
+      "id": "17e7c7c6-0634-4788-8b9c-526b74f9f057",
+      "name": "Template Atelier Kreyol"
+    },
+    {
+      "parameters": {
+        "jsCode": "// const data = $json;\n\nconst data = {\n  \"company_name\": \"Annifey\",\n  \"company_address\": \"QUARTIER DUCHENE, 97231 LE ROBERT\",\n  \"company_siret\": \"93143423700018\",\n  \"client_name\": \"AMAF - Association Martiniquaise des Aidants Familiaux\",\n  \"client_address\": \"41 rue Eugène Maillard, 97212 SAINT JOSEPH\",\n  \"invoice_number\": \"2026-03-002\",\n  \"invoice_date\": \"02/03/2026\",\n  \"service_date\": \"03/03/2026\",\n  \"payment_date\": \"03/03/2026\",\n  \"city\": \"97231 LE ROBERT\",\n  \"description\": \"Atelier de Créole\",\n  \"amount\": 160\n}\n\n// --- PRESTATAIRE ---\nconst company_name = data.company_name;\nconst company_signature_name = 'David Loutoby';\nconst company_address = data.company_address;\nconst company_siret = data.company_siret;\n\n// --- CLIENT ---\nconst client_name = data.client_name;\nconst client_address = data.client_address;\n\n// --- FACTURE ---\nconst invoice_number = data.invoice_number;\nconst invoice_date = data.invoice_date;\nconst service_date = data.service_date;\nconst payment_date = data.payment_date;\nconst city = data.city || \"\";\nconst description = data.description || \"Prestation de services\";\nconst amount = Number(data.amount || 0);\n\nconst html = `\n<!doctype html>\n<html lang=\"fr\">\n<head>\n<meta charset=\"utf-8\" />\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n<title>Facture</title>\n\n<link href=\"https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap\" rel=\"stylesheet\">\n\n<style>\n  body {\n    font-family: 'Open Sans', Arial, sans-serif;\n    color: #2b2b2b;\n    margin: 0;\n    padding: 40px;\n  }\n\n  .page {\n    width: 100%;\n    max-width: 700px;\n    margin: 0 auto;\n    border: 1px solid rgba(0,0,0,0.08);\n    padding: 30px;\n  }\n\n  h1 {\n    text-align: center;\n    color: #0b4b7a;\n    margin-bottom: 5px;\n  }\n\n  .paid {\n    text-align: center;\n    color: #2e7d32;\n    font-weight: bold;\n    margin-bottom: 20px;\n  }\n\n  .section {\n    margin-top: 20px;\n    font-size: 14px;\n    line-height: 1.6;\n  }\n\n  table {\n    width: 100%;\n    border-collapse: collapse;\n    margin-top: 10px;\n    font-size: 14px;\n    border: 1px solid #000;\n  }\n\n  th, td {\n    padding: 6px 8px;\n    border: 1px solid #000;\n    text-align: left;\n  }\n\n  th {\n    font-weight: bold;\n    background-color: #f5f5f5;\n  }\n\n  td.total {\n    font-weight: bold;\n  }\n\n  .footer {\n    margin-top: 30px;\n    font-size: 13px;\n  }\n\n  .signature {\n    margin-top: 50px;\n  }\n</style>\n</head>\n\n<body>\n<div class=\"page\">\n\n<h1>FACTURE</h1>\n<div class=\"paid\">FACTURE ACQUITTÉE</div>\n\n<div class=\"section\">\n<strong>Numéro de facture :</strong> ${invoice_number}<br/>\n<strong>Date d'émission :</strong> ${invoice_date}\n</div>\n\n<div class=\"section\">\n<strong>Prestataire :</strong><br/>\n${company_signature_name}<br/>\nNom commercial : ${company_name}<br/>\nAdresse : ${company_address}<br/>\nSIRET : ${company_siret}<br/>\nEntrepreneur individuel – Micro-entreprise<br/>\nTVA non applicable, art. 293 B du CGI\n</div>\n\n<div class=\"section\">\n<strong>Client :</strong><br/>\n${client_name}<br/>\n${client_address}\n</div>\n\n<div class=\"section\">\n<strong>Détail de la prestation :</strong>\n<table>\n<tr>\n  <th>Description</th>\n  <th>Date</th>\n  <th>Montant (€)</th>\n</tr>\n<tr>\n  <td>${description}</td>\n  <td>${service_date}</td>\n  <td>${amount.toFixed(2)} €</td>\n</tr>\n<tr>\n  <td colspan=\"2\" class=\"total\">Total</td>\n  <td class=\"total\">${amount.toFixed(2)} €</td>\n</tr>\n</table>\n</div>\n\n<div class=\"section\">\nPrestation réalisée le <strong>${service_date}</strong>.<br/>\nRèglement : Espèces.<br/>\nPayée en espèces le <strong>${payment_date}</strong>.\n</div>\n\n<div class=\"footer\">\nFait à ${city}, le ${invoice_date}\n</div>\n\n<div class=\"signature\">\nSignature :<br/><br/>\n<div style=\"font-family: 'Great Vibes', cursive; font-size: 28px;\">\n  ${company_signature_name}\n</div>\n</div>\n\n</div>\n</body>\n</html>\n`;\n\nreturn [{ html }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        720
+      ],
+      "id": "79a88c0e-71e2-44ad-889b-d13dc8bb8a78",
+      "name": "Template Atelier Kreyol 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// const data = $json;\n\nconst data = {\n  \"company_name\": \"Annifey\",\n  \"company_address\": \"QUARTIER DUCHENE, 97231 LE ROBERT\",\n  \"company_siret\": \"93143423700018\",\n  \"client_name\": \"Dupros Philippe\",\n  \"client_address\": \"20 rue du Général Ferrié 78340 les Clayes sous-bois\",\n  \"client_email\": \"phil.1@hotmail.fr\",\n  \"invoice_number\": \"2026-04-001\",\n  \"invoice_date\": \"08/04/2026\",\n  \"service_date\": \"Avril 2026\",\n  \"city\": \"97231 LE ROBERT\",\n  \"description\": \"Abonnement mensuel services digitaux <br />(gestion du site web et des réseaux sociaux)\",\n  \"amount\": 80,\n  \"company_iban\": \"FR76 1621 8000 0140 1209 9513 381\",\n  \"company_bic\": \"BFBKFRP1\"\n}\n\n// --- PRESTATAIRE ---\nconst company_name = data.company_name;\nconst company_signature_name = 'David Loutoby';\nconst company_address = data.company_address;\nconst company_siret = data.company_siret;\nconst company_iban = data.company_iban;\nconst company_bic = data.company_bic;\n\n// --- CLIENT ---\nconst client_name = data.client_name;\nconst client_address = data.client_address;\nconst client_email = data.client_email;\n\n// --- FACTURE ---\nconst invoice_number = data.invoice_number;\nconst invoice_date = data.invoice_date;\nconst service_date = data.service_date;\nconst city = data.city || \"\";\nconst description = data.description || \"Prestation de services\";\nconst amount = Number(data.amount || 0);\n\nconst html = `\n<!doctype html>\n<html lang=\"fr\">\n<head>\n<meta charset=\"utf-8\" />\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n<title>Facture</title>\n\n<link href=\"https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap\" rel=\"stylesheet\">\n\n<style>\n  body {\n    font-family: 'Open Sans', Arial, sans-serif;\n    color: #2b2b2b;\n    margin: 0;\n    padding: 40px;\n  }\n\n  .page {\n    width: 100%;\n    max-width: 700px;\n    margin: 0 auto;\n    border: 1px solid rgba(0,0,0,0.08);\n    padding: 30px;\n  }\n\n  h1 {\n    text-align: center;\n    color: #0b4b7a;\n    margin-bottom: 5px;\n  }\n\n  .paid {\n    text-align: center;\n    color: #2e7d32;\n    font-weight: bold;\n    margin-bottom: 20px;\n  }\n\n  .section {\n    margin-top: 20px;\n    font-size: 14px;\n    line-height: 1.6;\n  }\n\n  table {\n    width: 100%;\n    border-collapse: collapse;\n    margin-top: 10px;\n    font-size: 14px;\n    border: 1px solid #000;\n  }\n\n  th, td {\n    padding: 6px 8px;\n    border: 1px solid #000;\n    text-align: left;\n  }\n\n  th {\n    font-weight: bold;\n    background-color: #f5f5f5;\n  }\n\n  td.total {\n    font-weight: bold;\n  }\n\n  .footer {\n    margin-top: 30px;\n    font-size: 13px;\n  }\n\n  .signature {\n    margin-top: 50px;\n  }\n</style>\n</head>\n\n<body>\n<div class=\"page\">\n\n<h1>FACTURE</h1>\n<!--<div class=\"paid\">FACTURE ACQUITTÉE</div>-->\n\n<div class=\"section\">\n<strong>Numéro de facture :</strong> ${invoice_number}<br/>\n<strong>Date d'émission :</strong> ${invoice_date}\n</div>\n\n<div class=\"section\">\n<strong>Prestataire :</strong><br/>\n${company_signature_name}<br/>\nNom commercial : ${company_name}<br/>\nAdresse : ${company_address}<br/>\nSIRET : ${company_siret}<br/>\nEntrepreneur individuel – Micro-entreprise<br/>\nTVA non applicable, art. 293 B du CGI\n</div>\n\n<div class=\"section\">\n<strong>Client :</strong><br/>\n${client_name}<br/>\n${client_address}<br/>\n${client_email}\n</div>\n\n<div class=\"section\">\n<strong>Détail de la prestation :</strong>\n<table>\n<tr>\n  <th>Description</th>\n  <th>Date</th>\n  <th>Montant (€)</th>\n</tr>\n<tr>\n  <td>${description}</td>\n  <td>${service_date}</td>\n  <td>${amount.toFixed(2)} €</td>\n</tr>\n<tr>\n  <td colspan=\"2\" class=\"total\">Total</td>\n  <td class=\"total\">${amount.toFixed(2)} €</td>\n</tr>\n</table>\n</div>\n\n<div class=\"section\">\n  Règlement par virement bancaire :<br/>\n  IBAN : <strong>${company_iban}</strong><br/>\n  BIC : <strong>${company_bic}</strong>\n</div>\n\n<div class=\"footer\">\nFait à ${city}, le ${invoice_date}\n</div>\n\n<div class=\"signature\">\nSignature :<br/><br/>\n<div style=\"font-family: 'Great Vibes', cursive; font-size: 28px;\">\n  ${company_signature_name}\n</div>\n</div>\n\n</div>\n</body>\n</html>\n`;\n\nreturn [{ html }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -944,
+        880
+      ],
+      "id": "a7bdd8df-646b-448b-8f35-5a45c82995f0",
+      "name": "ledasfr abonnement"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "VARIABLES_QUITTANCE1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Output Viewer": {
+      "main": [
+        []
+      ]
+    },
+    "HTML Generator": {
+      "main": [
+        [
+          {
+            "node": "HTML Output Viewer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTML file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML file": {
+      "main": [
+        [
+          {
+            "node": "Save HTML File to Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save HTML File to Disk": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "Load Output PDF from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quote Content": {
+      "main": [
+        [
+          {
+            "node": "HTML Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GLOBAL VARIABLES": {
+      "main": [
+        [
+          {
+            "node": "Quote Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Generator1": {
+      "main": [
+        [
+          {
+            "node": "HTML Output Viewer1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTML file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML file1": {
+      "main": [
+        [
+          {
+            "node": "Save HTML File to Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save HTML File to Disk1": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTML to PDF1": {
+      "main": [
+        [
+          {
+            "node": "Load Output PDF from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GLOBAL VARIABLES1": {
+      "main": [
+        [
+          {
+            "node": "VARIABLES_QUITTANCE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VARIABLES_QUITTANCE": {
+      "main": [
+        [
+          {
+            "node": "HTML Generator1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Generator2": {
+      "main": [
+        [
+          {
+            "node": "HTML Output Viewer2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTML file2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML file2": {
+      "main": [
+        [
+          {
+            "node": "Save HTML File to Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save HTML File to Disk2": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTML to PDF2": {
+      "main": [
+        [
+          {
+            "node": "Load Output PDF from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WORKFLOW_VARIABLES": {
+      "main": [
+        [
+          {
+            "node": "QUITTANCE_CONSTANTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QUITTANCE_CONSTANTS": {
+      "main": [
+        [
+          {
+            "node": "QUITTANCE_VARIABLES",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QUITTANCE_VARIABLES": {
+      "main": [
+        [
+          {
+            "node": "Split quittance1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTML Generator2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split quittance1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Output PDF from Disk2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Generator3": {
+      "main": [
+        []
+      ]
+    },
+    "Save HTML File to Disk3": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTML to PDF3": {
+      "main": [
+        [
+          {
+            "node": "Load Output PDF from Disk3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VARIABLES_QUITTANCE1": {
+      "main": [
+        [
+          {
+            "node": "HTML Generator3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "VARIABLES_QUITTANCE1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Template Atelier Kreyol": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Template Atelier Kreyol 2": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ledasfr abonnement": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "efac6dc2-4131-47dc-ac5a-bcb0fc673610",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "xihyY2O9Kj6oGn5N",
+  "tags": []
+}

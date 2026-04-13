@@ -1,0 +1,304 @@
+{
+  "name": "create_calendar_events",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Create Events in Google Calendar\n",
+        "height": 656,
+        "width": 1808
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -992,
+        -256
+      ],
+      "typeVersion": 1,
+      "id": "22111ab2-8ef1-4c39-b4e5-4b7bb70ae296",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -544,
+        -96
+      ],
+      "id": "dd397856-3128-413b-a523-4cfe54ebf770",
+      "name": "When chat message received",
+      "webhookId": "4692f442-4614-4f50-ae38-3accb6807960"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "=Create a json array of one or more objects of events with keys `title`, `start` and `end` {{ $json.chatInput }}. \n\nReturn ONLY a valid JSON array starting with [ and ending with ]. Do not wrap it in any object or add any markdown. Just the raw array.\n\n\nToday is {{ $now }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -352,
+        -96
+      ],
+      "id": "a48bd279-b721-4562-a874-101283a097ac",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        112
+      ],
+      "id": "3025ea7e-64bd-4362-a866-84f0c2403668",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "RgUMePIkVJhMO1Ad",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Reset",
+        "height": 256,
+        "width": 576,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        576
+      ],
+      "typeVersion": 1,
+      "id": "42cd464b-4729-4418-9bf5-79c0eab615ed",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "0a8dd74fbfad28e76854e009f7760d537d051beb6652b0bec9f21783b20af9a2@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "n8n-calendar"
+        },
+        "eventId": "={{ $json.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        624
+      ],
+      "id": "89e8a90d-1523-4942-93f9-5a457b2502e4",
+      "name": "Delete an event1",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "BuC3BEchADE3zTDz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "0a8dd74fbfad28e76854e009f7760d537d051beb6652b0bec9f21783b20af9a2@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "n8n-calendar"
+        },
+        "limit": 500,
+        "timeMin": "2025-10-01T18:10:42",
+        "timeMax": "2025-10-31T18:10:42",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -192,
+        624
+      ],
+      "id": "669d697d-d33d-4118-97f8-8795fcfedb1e",
+      "name": "Get many events1",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "BuC3BEchADE3zTDz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "0a8dd74fbfad28e76854e009f7760d537d051beb6652b0bec9f21783b20af9a2@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "n8n-calendar"
+        },
+        "start": "={{ $json.start.dateTime }}",
+        "end": "={{ $json.end.dateTime }}",
+        "additionalFields": {
+          "summary": "={{ $json.title }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        -96
+      ],
+      "id": "04736f6a-abcd-4c38-b291-6b64a736d429",
+      "name": "Create events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "BuC3BEchADE3zTDz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n{\n\"title\": \"♦️ A&L – Drunk step of the leader with multiple turns for the follower + Marcos technique\",\n\"start\": {\n\"dateTime\": \"2025-10-10T12:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n},\n\"end\": {\n\"dateTime\": \"2025-10-10T14:00:00+02:00\",\n\"timeZone\": \"Europe/Warsaw\"\n}\n}\n]"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        112
+      ],
+      "id": "660429fb-2096-4538-b9e5-e95c8c89c06c",
+      "name": "Structured Output Parser",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all()[0].json['output'];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -96
+      ],
+      "id": "ac7baa48-af0f-4a29-ad17-2849c9ec93be",
+      "name": "Return array directly"
+    },
+    {
+      "parameters": {
+        "jsCode": "const audioUrl = \"http://tmpfiles.org/dl/4787206/hello_this_is_me.wav\";\nconst token = \"hf_xxx\";\nconst baseUrl = \"https://daviduk2025-whisper-stt-api.hf.space/gradio_api/call/predict\";\n\n// Step 1: POST request\nconst postResponse = await this.helpers.httpRequest({\n  method: 'POST',\n  url: baseUrl,\n  headers: {\n    'Content-Type': 'application/json',\n    'Authorization': `Bearer ${token}`\n  },\n  body: {\n    data: [{\n      path: audioUrl,\n      meta: { _type: \"gradio.FileData\" }\n    }]\n  }\n});\n\nconst eventId = postResponse.event_id;\n\n// Step 2: GET request\nconst getResponse = await this.helpers.httpRequest({\n  method: 'GET',\n  url: `${baseUrl}/${eventId}`,\n  headers: {\n    'Authorization': `Bearer ${token}`\n  }\n});\n\n// Parse the streaming response to get final transcription\nconst lines = getResponse.split('\\n');\nlet transcription = '';\n\nfor (const line of lines) {\n  if (line.startsWith('data: ')) {\n    try {\n      const data = JSON.parse(line.substring(6));\n      if (Array.isArray(data)) {\n        transcription = data[0];\n      }\n    } catch (e) {}\n  }\n}\n\nreturn [{ json: { transcription } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        560
+      ],
+      "id": "38355792-8885-414e-a5db-a430d465e1ec",
+      "name": "Transcribe Audio HF"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Return array directly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event1": {
+      "main": [
+        []
+      ]
+    },
+    "Get many events1": {
+      "main": [
+        [
+          {
+            "node": "Delete an event1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return array directly": {
+      "main": [
+        [
+          {
+            "node": "Create events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Martinique",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "6aed549c-89d9-42ab-9447-a92d367c04ab",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "nVongZGTGwptVOzR",
+  "tags": []
+}

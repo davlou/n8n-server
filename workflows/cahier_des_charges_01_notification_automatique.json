@@ -1,0 +1,176 @@
+{
+  "name": "cahier_des_charges_01_notification_automatique",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        48
+      ],
+      "id": "5b7756e0-ffc1-4b7d-bf50-78ee63081206",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all(); // all input items\nconst now = new Date();\nnow.setHours(0,0,0,0); // ignore time-of-day\n\nconst output = [];\n\nfor (const item of items) {\n  const dateStr = item.json.Date_Echeance;\n\n  if (!dateStr) {\n    console.log(`Skipping row_number ${item.json.row_number || \"unknown\"}: Date_Echeance is missing`);\n    continue;\n  }\n\n  const parts = dateStr.split(\"/\").map(Number);\n  if (parts.length !== 3 || parts.some(isNaN)) {\n    console.log(`Skipping row_number ${item.json.row_number || \"unknown\"}: Invalid Date_Echeance format: \"${dateStr}\"`);\n    continue;\n  }\n\n  const [day, month, year] = parts;\n  const dateEcheance = new Date(year, month - 1, day);\n  const threeDaysBefore = new Date(dateEcheance);\n  threeDaysBefore.setDate(dateEcheance.getDate() - 3);\n\n  if (now >= threeDaysBefore && now <= dateEcheance) {\n    item.json.myNewField = 1; // example new field\n\n    // Calculate remaining days\n    const diffTime = dateEcheance - now; // difference in milliseconds\n    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));\n    item.json.jours_restants = diffDays;\n\n    output.push(item);\n  } else {\n    console.log(`Skipping row_number ${item.json.row_number || \"unknown\"}: Not within 3-day range`);\n  }\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        48
+      ],
+      "id": "533b2eb4-260a-4bf7-8952-fd243dee335d",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AAuiyvnNMdnj671_FdsuKHt1GG3yAUv46Ity1SVuelM",
+          "mode": "list",
+          "cachedResultName": "n8n-baux-immobiliers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AAuiyvnNMdnj671_FdsuKHt1GG3yAUv46Ity1SVuelM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AAuiyvnNMdnj671_FdsuKHt1GG3yAUv46Ity1SVuelM/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Statut",
+              "lookupValue": "Actif"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        80,
+        48
+      ],
+      "id": "306f15e6-ba14-4f54-a25a-77585b80a418",
+      "name": "Baux commerciaux",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Rappel: Echéance de bail -  {{ $json.Adresse_Bien }}",
+        "emailType": "html",
+        "message": "=<!DOCTYPE html>\n<html>\n  <head>\n    <meta charset=\"UTF-8\">\n    <style>\n      body {\n        font-family: Arial, sans-serif;\n        line-height: 1.6;\n        color: #333;\n      }\n      .container {\n        max-width: 600px;\n        margin: auto;\n        padding: 20px;\n        border: 1px solid #e0e0e0;\n        border-radius: 8px;\n        background-color: #f9f9f9;\n      }\n      h2 {\n        color: #2c3e50;\n      }\n      ul {\n        padding-left: 20px;\n      }\n      .footer {\n        margin-top: 20px;\n        font-size: 0.9em;\n        color: #666;\n      }\n    </style>\n  </head>\n  <body>\n    <div class=\"container\">\n      <h2>Bonjour {{ $json.Nom_Proprietaire }},</h2>\n\n      <p>\n        Nous vous informons que le bail concernant votre bien situé au :<br>\n        <strong>{{ $json.Adresse_Bien }}</strong><br>\n        arrive à échéance le : <strong>{{ $json.Date_Echeance }}</strong>.<br>\n        Il reste <strong>{{ $json.jours_restants }}</strong> jour(s) avant cette échéance.\n      </p>\n\n      <p>Pour le renouvellement de ce bail ou toute question, nous restons à votre disposition.</p>\n\n      <h3>Détails du bien :</h3>\n      <ul>\n        <li>Loyer actuel : <strong>{{ $json.Montant_Loyer }} €/mois</strong></li>\n        <li>Date d'échéance : <strong>{{ $json.Date_Echeance }}</strong></li>\n      </ul>\n\n      <p>Cordialement,<br>\n      <strong>L'équipe IMMO CONSEIL PLUS</strong><br>\n      <a href=\"mailto:contact@immoconseilplus.fr\">contact@immoconseilplus.fr</a></p>\n    </div>\n  </body>\n</html>\n",
+        "options": {
+          "sendTo": "={{ $json.Email }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        528,
+        48
+      ],
+      "id": "5fc68e26-80fd-4d3d-a781-5b8fe5a31f82",
+      "name": "Create a draft",
+      "webhookId": "51d4c96b-41cf-40ad-a2e5-6b1ece5beb4a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hEVnGLFlJKGzGJFG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Systeme de Notification Automatique par Email",
+        "height": 528,
+        "width": 1168
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "87a1a402-57c1-4a56-8abf-4711acd0b092",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Baux commerciaux",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baux commerciaux": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Paris",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "31d1baa9-be8b-4fac-9230-aaac1a942807",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "pjhlpJdECnPDYIDM",
+  "tags": []
+}

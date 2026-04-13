@@ -1,0 +1,584 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -560
+      ],
+      "id": "60e28a04-233e-4af7-b4f3-aba23e3a90e1",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3edbba0-24f3-495d-ac1b-9f12471e95e9",
+              "name": "surname",
+              "value": "Doe",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        288
+      ],
+      "id": "d6263611-b702-4706-b4f5-216689205cd4",
+      "name": "surname"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "34b65772-ee1e-4f87-b5bb-bf0b74ce803c",
+              "name": "",
+              "value": "=Hi {{ $('firstname').item.json.firstname }} {{ $json.surname }}, nous sommes le {{ $now.format('dd-MM-yyyy') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        288
+      ],
+      "id": "de66d6dd-f3e7-4221-841d-96bc7c5bc6e0",
+      "name": "firstname_name"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fd44ae8d-1651-42b5-8dd6-c43440fc7b98",
+              "name": "firstname",
+              "value": "John",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        288
+      ],
+      "id": "983bf14f-aa18-43cf-b532-aad5a0e60da4",
+      "name": "firstname"
+    },
+    {
+      "parameters": {
+        "url": "https://api.insee.fr/api-sirene/3.11/siret/06320140400025",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "X-INSEE-Api-Key-Integration",
+              "value": "79efc73a-5d8a-4940-afc7-3a5d8ab940c4"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        64
+      ],
+      "id": "0c939799-b734-4ddd-904b-5f0ac84fdecc",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "insee-api-company-info-test",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        208,
+        64
+      ],
+      "id": "b34b65ca-59fd-4312-b9cd-f5f3d2cbb7ee",
+      "name": "Create spreadsheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1h8_LOZbeHv-EaWH4VFcc5SDvrVoCW6GHMn8M5dqaJIA",
+          "mode": "list",
+          "cachedResultName": "insee-api-company-info-test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h8_LOZbeHv-EaWH4VFcc5SDvrVoCW6GHMn8M5dqaJIA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h8_LOZbeHv-EaWH4VFcc5SDvrVoCW6GHMn8M5dqaJIA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "siret": "={{ $('HTTP Request').item.json.etablissement.siret }}",
+            "siren": "={{ $('HTTP Request').item.json.etablissement.siren }}",
+            "company name": "={{ $('HTTP Request').item.json.etablissement.uniteLegale.denominationUniteLegale }}",
+            "address": "={{ $('HTTP Request').item.json.etablissement.adresseEtablissement.typeVoieEtablissement }} {{ $('HTTP Request').item.json.etablissement.adresseEtablissement.libelleVoieEtablissement }}",
+            "postcode": "={{ $('HTTP Request').item.json.etablissement.adresseEtablissement.codePostalEtablissement }}",
+            "city": "={{ $('HTTP Request').item.json.etablissement.adresseEtablissement.libelleCommuneEtablissement }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "siren",
+              "displayName": "siren",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "siret",
+              "displayName": "siret",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company name",
+              "displayName": "company name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "postcode",
+              "displayName": "postcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        432,
+        64
+      ],
+      "id": "d20e1f8d-3f96-4590-afdb-8395f6628c91",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1h8_LOZbeHv-EaWH4VFcc5SDvrVoCW6GHMn8M5dqaJIA",
+          "mode": "list",
+          "cachedResultName": "insee-api-company-info-test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h8_LOZbeHv-EaWH4VFcc5SDvrVoCW6GHMn8M5dqaJIA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h8_LOZbeHv-EaWH4VFcc5SDvrVoCW6GHMn8M5dqaJIA/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        208,
+        512
+      ],
+      "id": "0dcf7007-1530-4249-98ac-3024e12db3b5",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "app1w7YXxR41K2AOX",
+          "mode": "list",
+          "cachedResultName": "n8n-project",
+          "cachedResultUrl": "https://airtable.com/app1w7YXxR41K2AOX"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblbxe1K1VA5Db8s7",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/app1w7YXxR41K2AOX/tblbxe1K1VA5Db8s7"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "siren": "={{ $json.siren.toString() }}",
+            "siret": "={{ $json.siret.toString() }}",
+            "company_name": "={{ $json[\"company name\"] }}",
+            "address": "={{ $json.address }}",
+            "postcode": "={{ $json.postcode.toString() }}",
+            "city": "={{ $json.city }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "siren",
+              "displayName": "siren",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "siret",
+              "displayName": "siret",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "postcode",
+              "displayName": "postcode",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        512
+      ],
+      "id": "9aa44992-f2bc-4ca1-bf46-8ac7da503921",
+      "name": "Create or update a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "HPdmKas8bKOhsq3e",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        656,
+        -336
+      ],
+      "typeVersion": 1,
+      "id": "46f0437f-f09f-41da-8dee-a58d87f1fa48",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HM4m6UE0o37RyqAA8G53odakQUcNRNEPljjMzRybD6s",
+          "mode": "list",
+          "cachedResultName": "client-test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HM4m6UE0o37RyqAA8G53odakQUcNRNEPljjMzRybD6s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HM4m6UE0o37RyqAA8G53odakQUcNRNEPljjMzRybD6s/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -272,
+        -560
+      ],
+      "id": "20f8e6ed-be8a-4ec5-9b2c-000f3345a068",
+      "name": "Get row(s) in clients sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b3e17081-a1a6-4489-9c2c-a7427bcf1a7c",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        -560
+      ],
+      "id": "a489d193-a3b3-488f-8774-f25a1a0a69b0",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in clients sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "surname": {
+      "main": [
+        [
+          {
+            "node": "firstname_name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "firstname": {
+      "main": [
+        [
+          {
+            "node": "surname",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Create spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Create or update a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in clients sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "61fc6de4-4e48-4de3-9d1f-f26154963279",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "mYL19jIPxgMtuJTB",
+  "tags": []
+}

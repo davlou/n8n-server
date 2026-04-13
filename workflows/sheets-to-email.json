@@ -1,0 +1,318 @@
+{
+  "name": "sheets-to-email",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "49cf78ce-921b-49c0-87f8-35e3c72c0b4c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HM4m6UE0o37RyqAA8G53odakQUcNRNEPljjMzRybD6s",
+          "mode": "list",
+          "cachedResultName": "client-test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HM4m6UE0o37RyqAA8G53odakQUcNRNEPljjMzRybD6s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HM4m6UE0o37RyqAA8G53odakQUcNRNEPljjMzRybD6s/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        224,
+        0
+      ],
+      "id": "358642d1-f97d-487d-83ac-bf1163e454fa",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cf710014-eedc-4d7e-8e1a-daaaa656952d",
+              "leftValue": "={{ $json[\"Company Name\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "38785036-a8db-4697-b388-531c5a57ca93",
+              "leftValue": "={{ $json[\"Email Address\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        0
+      ],
+      "id": "e13eedf9-dc3a-41fe-8d64-294465798f29",
+      "name": "If non-empty row"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "Clients",
+        "emailType": "html",
+        "message": "=Hello,\n\n{{ $json.htmlTable }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        928,
+        -240
+      ],
+      "id": "6a873526-442a-4768-8d31-21efe2d76efe",
+      "name": "Create a draft",
+      "webhookId": "2f0d59ff-55fd-4fd1-8b15-91b4da702f25",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hEVnGLFlJKGzGJFG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1HM4m6UE0o37RyqAA8G53odakQUcNRNEPljjMzRybD6s",
+          "mode": "list",
+          "cachedResultName": "client-test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HM4m6UE0o37RyqAA8G53odakQUcNRNEPljjMzRybD6s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HM4m6UE0o37RyqAA8G53odakQUcNRNEPljjMzRybD6s/edit#gid=0"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1184,
+        208
+      ],
+      "id": "1076b256-a7d8-4377-be92-28849d5182c6",
+      "name": "Delete rows or columns from sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "STMHrX1gNBNZi5zh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the full JSON of the current item\nconst data = $input.all();\n\n// Extract keys (columns) dynamically\nconst keys = Object.keys(data);\n\n// Build table header\nlet html = '<table border=\"1\" cellspacing=\"0\" cellpadding=\"5\"><tr>';\nkeys.forEach(key => {\n  html += `<th>${key}</th>`;\n});\nhtml += '</tr>';\n\n// Build table row\nhtml += '<tr>';\nkeys.forEach(key => {\n  html += `<td>${data[key] ?? ''}</td>`;\n});\nhtml += '</tr></table>';\n\n// Return the HTML as output for Gmail node\nreturn {\n  json: {\n    htmlTable: html\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -240
+      ],
+      "id": "c89645b9-7250-4dd5-9fa5-6a0f75cc7fba",
+      "name": "Text"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().sort((a, b) => b.json.row_number - a.json.row_number);;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        192
+      ],
+      "id": "7285face-380e-450e-a0dc-1e7652a9d4d2",
+      "name": "Inverse"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        928,
+        192
+      ],
+      "id": "e700df43-3ff5-482a-bc80-e866b931f217",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "height": 384,
+        "width": 768
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        656,
+        96
+      ],
+      "typeVersion": 1,
+      "id": "67efc705-375f-4075-b95c-1990535b185a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "height": 320,
+        "width": 784
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "4197417d-20b0-49d8-ba4f-ab0d0410aa57",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If non-empty row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If non-empty row": {
+      "main": [
+        [
+          {
+            "node": "Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Inverse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inverse": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete rows or columns from sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "12f89a3a-b6b4-48cb-86f8-d713611c21da",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "iEUmfJ7vYmanKnpI",
+  "tags": []
+}

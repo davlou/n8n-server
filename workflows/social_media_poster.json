@@ -1,0 +1,305 @@
+{
+  "name": "social_media_poster",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1113fb61-302d-4e49-b2bc-c8a0eb559d2e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"title\": \"test post\",\n  \"my_field_2\": 1\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        0
+      ],
+      "id": "bd8f18e1-3801-4661-abf9-5545859c642b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('Edit Fields').item.json.title }}",
+        "regionCode": "MQ",
+        "categoryId": "27",
+        "options": {
+          "privacyStatus": "private"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        768,
+        0
+      ],
+      "id": "8ab4288a-720d-4ca0-b99e-5c7b3688cbc6",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "SRJzjB9qxOBf49mi",
+          "name": "YouTube account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.title }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        768,
+        -224
+      ],
+      "id": "524f2476-fb0a-49aa-9700-2871bd7ce5c2",
+      "name": "Create Tweet",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "9E2vtLNEleeV9meg",
+          "name": "X account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1-CggQGY8gklz-Jig1SYPLN95-pzKICoB",
+          "mode": "list",
+          "cachedResultName": "output_video_20250320_130011.mp4",
+          "cachedResultUrl": "https://drive.google.com/file/d/1-CggQGY8gklz-Jig1SYPLN95-pzKICoB/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        576,
+        0
+      ],
+      "id": "66917bb3-a457-48a5-8243-dcd68808eaba",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dUUl1HLAX7266RrF",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/inbox/video/init/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"source_info\": {\n    \"source\": \"FILE_UPLOAD\",\n    \"video_size\": {{ $json.video_size }},\n    \"chunk_size\": {{ $json.video_size }},\n    \"total_chunk_count\": 1\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        992,
+        272
+      ],
+      "id": "ce9c9afb-8829-4c93-bc40-82f92568a1b0",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n9VjFYB5JRHhHc19",
+          "name": "Tiktok header auth access token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst output = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const binaryPropertyName = Object.keys(item.binary)[0]; // Usually 'data'\n  \n  // Get the actual binary buffer\n  const buffer = await this.helpers.getBinaryDataBuffer(i, binaryPropertyName);\n  \n  // Get actual size in bytes\n  const sizeInBytes = buffer.length;\n  \n  output.push({\n    json: {\n      video_size: sizeInBytes\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        272
+      ],
+      "id": "911fb9d4-b77f-4106-ba14-da1289e7d531",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e8064227-bb56-46af-8c17-706d0a54a018",
+              "name": "data.upload_url",
+              "value": "={{ $json.data.upload_url }}",
+              "type": "string"
+            },
+            {
+              "id": "8e4d98a6-a9e1-4e9f-9158-dbc64f256b4a",
+              "name": "data.publish_id",
+              "value": "={{ $json.data.publish_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        80
+      ],
+      "id": "e5616d40-ea1e-4289-ae20-fcbc096372aa",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $json.data.upload_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "video/mp4"
+            },
+            {
+              "name": "Content-Length",
+              "value": "={{ $('Code in JavaScript').item.json.video_size }}"
+            },
+            {
+              "name": "Content-Range",
+              "value": "={{ 'bytes 0-' + ($('Code in JavaScript').item.json.video_size - 1) + '/' + $('Code in JavaScript').item.json.video_size }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "={{ $('Download file').item.binary.data }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1216,
+        688
+      ],
+      "id": "6707c9a8-f690-463e-85e5-33376d2de9bb",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create Tweet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Tweet": {
+      "main": [
+        []
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "71000974-f2c8-4dfc-89c3-b719483ee208",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2f66b4068d939e440ad4965f07dbcc26d85af51f9f4de9cb08092666551dd7"
+  },
+  "id": "yPXJSwejhSDsX4Xx",
+  "tags": []
+}
