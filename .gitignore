@@ -1,0 +1,18 @@
+# Secrets — never commit real credentials
+.env
+
+# n8n runtime data (database, binary uploads, config, keys)
+n8n-data/
+n8n-data-b/
+n8n-data_bak_*/
+
+# Allow the workflows subfolder that n8n Source Control writes to
+!workflows/
+
+# Node / npm
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
